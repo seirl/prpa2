@@ -19,6 +19,18 @@ GLuint GL::loadShader(std::string& vertex_file_path, std::string& fragment_file_
     glShaderSource(vertex_shader_ID, 1, &vertex_source_pointer, nullptr);
     glCompileShader(vertex_shader_ID);
 
+#ifndef NDEBUG
+    // Check Vertex Shader
+    glGetShaderiv(vertex_shader_ID, GL_COMPILE_STATUS, &result);
+    glGetShaderiv(vertex_shader_ID, GL_INFO_LOG_LENGTH, &info_log_length);
+    if (info_log_length > 0)
+    {
+        std::vector<char> VertexShaderErrorMessage(info_log_length + 1);
+        glGetShaderInfoLog(vertex_shader_ID, info_log_length, nullptr, &VertexShaderErrorMessage[0]);
+        std::cerr << VertexShaderErrorMessage.data() << std::endl;
+    }
+#endif
+
     glGetShaderiv(vertex_shader_ID, GL_COMPILE_STATUS, &result);
     glGetShaderiv(vertex_shader_ID, GL_INFO_LOG_LENGTH, &info_log_length);
     std::vector<char> vertex_shader_error_message;
@@ -28,6 +40,18 @@ GLuint GL::loadShader(std::string& vertex_file_path, std::string& fragment_file_
     char const * fragment_source_pointer = fragment_shader_code.c_str();
     glShaderSource(fragment_shader_ID, 1, &fragment_source_pointer, nullptr);
     glCompileShader(fragment_shader_ID);
+
+#ifndef NDEBUG
+    // Check Fragment Shader
+    glGetShaderiv(fragment_shader_ID, GL_COMPILE_STATUS, &result);
+    glGetShaderiv(fragment_shader_ID, GL_INFO_LOG_LENGTH, &info_log_length);
+    if (info_log_length > 0)
+    {
+        std::vector<char> FragmentShaderErrorMessage(info_log_length + 1);
+        glGetShaderInfoLog(fragment_shader_ID, info_log_length, nullptr, &FragmentShaderErrorMessage[0]);
+        std::cerr << FragmentShaderErrorMessage.data() << std::endl;
+    }
+#endif
 
     glGetShaderiv(fragment_shader_ID, GL_COMPILE_STATUS, &result);
     glGetShaderiv(fragment_shader_ID, GL_INFO_LOG_LENGTH, &info_log_length);
@@ -54,8 +78,8 @@ GLuint GL::loadShader(std::string& vertex_file_path, std::string& fragment_file_
 
 std::string GL::readFile(std::string& path)
 {
-  std::ifstream file(path, std::ios_base::in);
-  std::string res((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
-  file.close();
-  return res;
+    std::ifstream file(path, std::ios_base::in);
+    std::string res((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
+    file.close();
+    return res;
 } 
