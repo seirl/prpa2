@@ -8,8 +8,8 @@ Window::Window(int w, int h, std::string title)
     glfwSetErrorCallback(error_callback);
     if (!glfwInit())
         std::exit(-1);
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 4);
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 2);
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
     window = glfwCreateWindow(w, h, title.c_str(), nullptr, nullptr);
     if (!window)
