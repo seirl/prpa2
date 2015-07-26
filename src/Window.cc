@@ -1,6 +1,7 @@
 #include "Window.hh"
 #include <iostream>
 #include <cstdlib>
+#include "Demo.hh"
 
 Window::Window(int w, int h, std::string title)
 {
@@ -84,6 +85,9 @@ void Window::key_callback(GLFWwindow* window, int key, int scancode, int action,
     {
         case GLFW_KEY_ESCAPE:
             glfwSetWindowShouldClose(window, GL_TRUE);
+            break;
+        case GLFW_KEY_R:
+            Demo::getInstance().reloadShader();
             break;
     }
 }

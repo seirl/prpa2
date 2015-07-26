@@ -8,6 +8,7 @@ class Demo
     public:
         static Demo& getInstance(void);
         void launch(void);
+        void reloadShader(void);
 
     private:
         Demo();
@@ -17,7 +18,6 @@ class Demo
         void update(void);
         void render(void);
         bool running(void);
-        void finish(void);
         size_t elapsedTime(void);
 
         static Demo* instance;

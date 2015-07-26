@@ -37,7 +37,12 @@ void Demo::launch(void)
         render();
         window->swapBuffers();
     }
-    finish();
+}
+
+void Demo::reloadShader(void)
+{
+    std::string vert("src/shader.vert"), frag("src/shader.frag");
+    programID = GL::loadShader(vert, frag);
 }
 
 void Demo::init(void)
@@ -89,11 +94,6 @@ void Demo::render(void)
 bool Demo::running(void)
 {
     return !window->should_close();
-}
-
-void Demo::finish(void)
-{
-    delete window;
 }
 
 size_t Demo::elapsedTime(void)
