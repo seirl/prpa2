@@ -1,9 +1,9 @@
 #version 330 core
 
+out vec3 fragColor;
+
 uniform vec2 iResolution;
 uniform float iGlobalTime;
-
-out vec4 fragColor;
 
 #define MAXSTEP 45.0
 #define SPEED 1.0
@@ -55,9 +55,9 @@ void animate(inout vec3 ro)
     ro.z = cos(iGlobalTime * SPEED) * DIST;
 }
 
-void mainImage(out vec4 fragColor, in vec2 fragCoord)
+void main()
 {
-    vec2 uv = fragCoord.xy / iResolution.xy;
+    vec2 uv = gl_FragCoord.xy / iResolution.xy;
     vec2 p = -1.0 + 2.0 * uv;
     p.x *= iResolution.x / iResolution.y;
     
@@ -104,8 +104,8 @@ void mainImage(out vec4 fragColor, in vec2 fragCoord)
         float spec = pow(clamp(dot(light, ref), 0.0, 1.0), 16.0);
         col += 1.0 * spec;
         
-        fragColor = vec4(col, 1.0);
+        fragColor = vec3(col);
     }
     else
-        fragColor = vec4(0.0);
+        fragColor = vec3(0.0);
 }

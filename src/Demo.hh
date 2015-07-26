@@ -23,8 +23,9 @@ class Demo
         static Demo* instance;
 
         Window* window;
-        GLuint programID;
+        GLuint vertexArrayID;
         GLuint quad;
+        GLuint programID;
 };
 
 #endif /* !DEMO_HH */
