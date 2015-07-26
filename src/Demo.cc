@@ -57,6 +57,7 @@ void Demo::init(void)
 
 void Demo::update(void)
 {
+    window->poll_events();
 }
 
 void Demo::render(void)

@@ -23,19 +23,13 @@ GLuint GL::loadShader(std::string& vertex_file_path, std::string& fragment_file_
     // Check Vertex Shader
     glGetShaderiv(vertex_shader_ID, GL_COMPILE_STATUS, &result);
     glGetShaderiv(vertex_shader_ID, GL_INFO_LOG_LENGTH, &info_log_length);
-    if (info_log_length > 0)
+    if (info_log_length > 1)
     {
-        std::vector<char> VertexShaderErrorMessage(info_log_length + 1);
+        std::vector<char> VertexShaderErrorMessage(info_log_length);
         glGetShaderInfoLog(vertex_shader_ID, info_log_length, nullptr, &VertexShaderErrorMessage[0]);
         std::cerr << VertexShaderErrorMessage.data() << std::endl;
     }
 #endif
-
-    glGetShaderiv(vertex_shader_ID, GL_COMPILE_STATUS, &result);
-    glGetShaderiv(vertex_shader_ID, GL_INFO_LOG_LENGTH, &info_log_length);
-    std::vector<char> vertex_shader_error_message;
-    vertex_shader_error_message.resize(info_log_length);
-    glGetShaderInfoLog(vertex_shader_ID, info_log_length, nullptr, &vertex_shader_error_message[0]);
 
     char const * fragment_source_pointer = fragment_shader_code.c_str();
     glShaderSource(fragment_shader_ID, 1, &fragment_source_pointer, nullptr);
@@ -45,30 +39,30 @@ GLuint GL::loadShader(std::string& vertex_file_path, std::string& fragment_file_
     // Check Fragment Shader
     glGetShaderiv(fragment_shader_ID, GL_COMPILE_STATUS, &result);
     glGetShaderiv(fragment_shader_ID, GL_INFO_LOG_LENGTH, &info_log_length);
-    if (info_log_length > 0)
+    if (info_log_length > 1)
     {
-        std::vector<char> FragmentShaderErrorMessage(info_log_length + 1);
+        std::vector<char> FragmentShaderErrorMessage(info_log_length);
         glGetShaderInfoLog(fragment_shader_ID, info_log_length, nullptr, &FragmentShaderErrorMessage[0]);
         std::cerr << FragmentShaderErrorMessage.data() << std::endl;
     }
 #endif
-
-    glGetShaderiv(fragment_shader_ID, GL_COMPILE_STATUS, &result);
-    glGetShaderiv(fragment_shader_ID, GL_INFO_LOG_LENGTH, &info_log_length);
-    std::vector<char> fragment_shader_error_message;
-    fragment_shader_error_message.resize(info_log_length);
-    glGetShaderInfoLog(fragment_shader_ID, info_log_length, nullptr, &fragment_shader_error_message[0]);
 
     GLuint program_ID = glCreateProgram();
     glAttachShader(program_ID, vertex_shader_ID);
     glAttachShader(program_ID, fragment_shader_ID);
     glLinkProgram(program_ID);
 
+#ifndef NDEBUG
+    // Check the program
     glGetProgramiv(program_ID, GL_LINK_STATUS, &result);
     glGetProgramiv(program_ID, GL_INFO_LOG_LENGTH, &info_log_length);
-    std::vector<char> program_error_message;
-    program_error_message.resize(std::max(info_log_length, int(1)));
-    glGetProgramInfoLog(program_ID, info_log_length, nullptr, &program_error_message[0]);
+    if (info_log_length > 1)
+    {
+        std::vector<char> ProgramErrorMessage(info_log_length);
+        glGetProgramInfoLog(program_ID, info_log_length, NULL, &ProgramErrorMessage[0]);
+        std::cerr << ProgramErrorMessage.data() << std::endl;
+    }
+#endif
 
     glDeleteShader(vertex_shader_ID);
     glDeleteShader(fragment_shader_ID);
