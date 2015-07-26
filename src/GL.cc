@@ -76,4 +76,4 @@ std::string GL::readFile(std::string& path)
     std::string res((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
     file.close();
     return res;
-} 
+}

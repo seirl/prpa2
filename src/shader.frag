@@ -106,7 +106,7 @@ void main()
     vec2 uv = gl_FragCoord.xy / iResolution.xy;
     vec2 p = -1.0 + 2.0 * uv;
     p.x *= iResolution.x / iResolution.y;
-    
+
     // Camera
     vec3 ro = vec3(0.0, 2.0, 0.0);
     animate(ro);
@@ -115,7 +115,7 @@ void main()
     vec3 cr = normalize(cross(cf, vec3(0.0,1.0,0.0)));
     vec3 cu = normalize(cross(cr, cf));
     vec3 rd = normalize(p.x*cr + p.y*cu + 2.5*cf);
-    
+
     float t = 0.0;
     vec2 res = vec2(-1.0, 1.0);
     for (int i = 0; i < 100; i++)
@@ -125,9 +125,9 @@ void main()
         res = map(ro + t * rd);
         t += res.y;
     }
-    
+
     vec3 light = vec3(0.57735);
-    
+
     // intersect a sphere
     if (t <= MAXSTEP)
     {
@@ -139,17 +139,17 @@ void main()
         col += vec3(0.2, 0.3, 0.4) * clamp(pos.z, 0.0, 1.0);
         // Ambiant ligth
         col += vec3(0.1);
-        
+
         // Color
         col = mix(col, getMaterial(pos, res.x), 0.9);
-        
+
         // Reflection
         vec3 ref = reflect(rd, n);
-        
+
         // Specular
         float spec = pow(clamp(dot(light, ref), 0.0, 1.0), 16.0);
         col += 1.0 * spec;
-        
+
         fragColor = vec3(col);
     }
     else
