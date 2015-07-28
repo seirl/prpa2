@@ -36,7 +36,6 @@ Sound::Sound()
 
 Sound::~Sound()
 {
-	/* exit context */
 	alDeleteSources(1, &source_);
 	alDeleteBuffers(1, &buffer_);
 	ALCdevice* device = alcGetContextsDevice(context_);

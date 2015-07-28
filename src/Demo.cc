@@ -64,8 +64,6 @@ void Demo::init(void)
     window = new Window(1280, 720, "PRPA2");
     sound = new Sound();
 
-    sound->play_test_wav();
-
     glGenVertexArrays(1, &vertexArrayID);
     glBindVertexArray(vertexArrayID);
 
