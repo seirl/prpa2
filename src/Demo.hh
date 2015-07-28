@@ -1,5 +1,6 @@
 #pragma once
 #include "Window.hh"
+#include "Sound.hh"
 
 class Demo
 {
@@ -20,6 +21,7 @@ class Demo
 
         static Demo* instance;
 
+        Sound* sound;
         Window* window;
         GLuint vertexArrayID;
         GLuint quad;

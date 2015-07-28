@@ -5,4 +5,10 @@ build/Makefile: CMakeLists.txt
 	mkdir -p build
 	cd build && cmake ..
 
-.PHONY: all
+clean:
+	make -C build clean
+
+distclean:
+	rm -rf build
+
+.PHONY: all clean distclean

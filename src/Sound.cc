@@ -2,38 +2,20 @@
 #include <stdint.h>
 #include <inttypes.h>
 
-#include <AL/al.h>
-#include <AL/alc.h>
-#include <AL/alut.h>
+#include "Sound.hh"
 
-
-static inline ALenum to_al_format(short channels, short samples)
-{
-    static const ALenum formats[] = {
-        AL_FORMAT_MONO8,
-        AL_FORMAT_STEREO8,
-        AL_FORMAT_MONO16,
-        AL_FORMAT_STEREO16,
-    };
-    return formats[((samples >> 3) - 1) * 2 + (channels > 1)];
-}
-
-int main(int argc, char **argv)
+Sound::Sound()
 {
 	const ALCchar *defaultDeviceName = alcGetString(NULL, ALC_DEFAULT_DEVICE_SPECIFIER);
-	ALCdevice *device = alcOpenDevice(defaultDeviceName);
+	ALCdevice* device = alcOpenDevice(defaultDeviceName);
 
-	if (!device) {
-        std::cerr << "unable to open default device" << std::endl;
-		return -1;
-	}
+	if (!device)
+        throw std::runtime_error("unable to open default device");
 
-	ALCcontext *context = alcCreateContext(device, NULL);
+	context_ = alcCreateContext(device, NULL);
 
-	if (!alcMakeContextCurrent(context)) {
-        std::cerr << "failed to make default context" << std::endl;
-		return -1;
-	}
+	if (!alcMakeContextCurrent(context_))
+        throw std::runtime_error("failed to make default context");
 
 	/* set orientation */
 	alListener3f(AL_POSITION, 0, 0, 1.0f);
@@ -42,40 +24,49 @@ int main(int argc, char **argv)
     ALfloat orient[] = { 0.0f, 0.0f, 1.0f, 0.0f, 1.0f, 0.0f };
 	alListenerfv(AL_ORIENTATION, orient);
 
-	ALuint buffer, source;
+	alGenSources(1u, &source_);
+	alSourcef(source_, AL_PITCH, 1);
+	alSourcef(source_, AL_GAIN, 1);
+	alSource3f(source_, AL_POSITION, 0, 0, 0);
+	alSource3f(source_, AL_VELOCITY, 0, 0, 0);
+	alSourcei(source_, AL_LOOPING, AL_FALSE);
 
-	alGenSources((ALuint)1, &source);
-	alSourcef(source, AL_PITCH, 1);
-	alSourcef(source, AL_GAIN, 1);
-	alSource3f(source, AL_POSITION, 0, 0, 0);
-	alSource3f(source, AL_VELOCITY, 0, 0, 0);
-	alSourcei(source, AL_LOOPING, AL_FALSE);
+	alGenBuffers(1, &buffer_);
+}
 
-	ALvoid *data;
-	ALsizei size, freq;
-	ALenum format;
+Sound::~Sound()
+{
+	/* exit context */
+	alDeleteSources(1, &source_);
+	alDeleteBuffers(1, &buffer_);
+	ALCdevice* device = alcGetContextsDevice(context_);
+	alcMakeContextCurrent(NULL);
+	alcDestroyContext(context_);
+	alcCloseDevice(device);
+}
 
-	alGenBuffers(1, &buffer);
+void Sound::play_test_wav()
+{
+    ALvoid *data;
+    ALsizei size, freq;
+    ALenum format;
 	ALboolean loop = AL_FALSE;
     signed char f[] = "test.wav";
 	alutLoadWAVFile(f, &format, &data, &size, &freq, &loop);
-	alBufferData(buffer, format, data, size, freq);
-	alSourcei(source, AL_BUFFER, buffer);
-	alSourcePlay(source);
-	ALint source_state;
 
-	alGetSourcei(source, AL_SOURCE_STATE, &source_state);
-	while (source_state == AL_PLAYING) {
-		alGetSourcei(source, AL_SOURCE_STATE, &source_state);
-	}
+    play_buffer(data, size, freq, format);
+}
 
-	/* exit context */
-	alDeleteSources(1, &source);
-	alDeleteBuffers(1, &buffer);
-	device = alcGetContextsDevice(context);
-	alcMakeContextCurrent(NULL);
-	alcDestroyContext(context);
-	alcCloseDevice(device);
+bool Sound::is_playing()
+{
+    ALint source_state;
+	alGetSourcei(source_, AL_SOURCE_STATE, &source_state);
+    return source_state == AL_PLAYING;
+}
 
-	return 0;
+void Sound::play_buffer(ALvoid *data, ALsizei size, ALsizei freq, ALenum format)
+{
+	alBufferData(buffer_, format, data, size, freq);
+	alSourcei(source_, AL_BUFFER, buffer_);
+	alSourcePlay(source_);
 }
