@@ -1,7 +1,8 @@
-.PHONY: all
-all: build
+all: build/Makefile
 	make -C build
 
-build: CMakeLists.txt
+build/Makefile: CMakeLists.txt
 	mkdir -p build
 	cd build && cmake ..
+
+.PHONY: all
