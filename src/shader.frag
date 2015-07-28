@@ -22,11 +22,14 @@ uniform float FPS;
 #define FLOOR_HEIGHT    1.5
 #define H_BEAM_HEIGTH   (FLOOR_HEIGHT - BEAM_WIDTH - 0.1)
 
-#define B_WALL_ID   1
-#define R_WALL_ID   2
-#define L_WALL_ID   3
-#define F_WALL_ID   4
-#define BEAM_ID     5
+// Transparancy = mod(id, 16)
+#define B_WALL_ID   0x10
+#define R_WALL_ID   0x20
+#define L_WALL_ID   0x30
+#define F_WALL_ID   0x40
+#define BEAM_ID     0x50
+#define X_WINDOW_ID 0x68
+#define Z_WINDOW_ID 0x78
 
 int numbers_display(int i)
 {
@@ -217,7 +220,7 @@ vec3 texStain(vec3 p, vec3 c1, vec3 c2, float power)
 
 vec3 getMaterial(vec3 p, float id)
 {
-    switch (int(id))
+    switch (int(floor(id)))
     {
         case B_WALL_ID:
             return texStain(p, vec3(1.0, 0.0, 0.0), vec3(0.125, 0.05, 0.1), 2);
@@ -229,6 +232,9 @@ vec3 getMaterial(vec3 p, float id)
             return vec3(0.1, 0.2, 0.4);
         case BEAM_ID:
             return texStain(p.xzy, vec3(0.4), vec3(0.2), 64);
+        case X_WINDOW_ID:
+        case Z_WINDOW_ID:
+            //return mix(vec3(0.2, 0.3, 0.8), , mod(id, 16) / 15.0);
         default:
             return vec3(0.2, 0.3, 0.8);
     }
@@ -362,15 +368,14 @@ vec2 elevatorShaft(vec3 p)
 
 vec2 elevator(vec3 p)
 {
-    /*vec2 bwall = vec2(B_WALL_ID,  box(q - vec3(0.0, 0.0, -1.0),
-        vec3(1.0, FLOOR_HEIGHT, WALL_THICKNESS)));
-    vec2 rwall = vec2(R_WALL_ID, box(q - vec3(-1.0, 0.0, 0.0),
-        vec3(WALL_THICKNESS, FLOOR_HEIGHT, 1.0)));
-    vec2 lwall = vec2(L_WALL_ID, box(q - vec3(1.0, 0.0, 0.0),
-        vec3(WALL_THICKNESS, FLOOR_HEIGHT, 1.0)));
-    vec2 fwall = vec2(F_WALL_ID, moonQuarter(q - vec3(0.0, 0.0, 1.0),
-        vec2(1.0 + WALL_THICKNESS, FLOOR_HEIGHT), WALL_THICKNESS));
-    vec2 beams = vec2(BEAM_ID, beams(q));*/
+    vec2 bwall = vec2(X_WINDOW_ID,  box(p - vec3(0.0, 0.0, -0.7),
+        vec3(1.0 - BEAM_WIDTH * 2.0, FLOOR_HEIGHT, BEAM_THICKNESS)));
+    vec2 rwall = vec2(Z_WINDOW_ID, box(p - vec3(-1.0 + BEAM_WIDTH * 2.0, 0.0, 0.0),
+        vec3(BEAM_THICKNESS, FLOOR_HEIGHT, 0.7)));
+    vec2 lwall = vec2(Z_WINDOW_ID, box(p - vec3(1.0 - BEAM_WIDTH * 2.0 , 0.0, 0.0),
+        vec3(BEAM_THICKNESS, FLOOR_HEIGHT, 0.7)));
+    vec2 fwall = vec2(X_WINDOW_ID, moonQuarter(p - vec3(0.0, 0.0, 0.7),
+        vec2(1.0 + WALL_THICKNESS - BEAM_WIDTH * 2.0 , FLOOR_HEIGHT), BEAM_THICKNESS));
 
     return vec2(17.0, 1.0);
 }
