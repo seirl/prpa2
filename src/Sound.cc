@@ -1,5 +1,5 @@
 #include <iostream>
-#include <stdint.h>
+#include <stdexcept>
 #include <inttypes.h>
 
 #include "Sound.hh"
