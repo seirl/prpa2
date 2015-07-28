@@ -31,7 +31,7 @@ void Demo::launch(void)
 {
     init();
 
-    int nbFrames = 0;
+    size_t nbFrames = 0;
     size_t currentTime;
     size_t lastTime = elapsedTime();
 

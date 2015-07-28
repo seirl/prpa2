@@ -27,5 +27,5 @@ class Demo
         GLuint quad;
         GLuint programID;
 
-        double FPS;
+        size_t FPS;
 };
