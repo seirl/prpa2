@@ -32,8 +32,8 @@ void Demo::launch(void)
     init();
 
     int nbFrames = 0;
-    double currentTime;
-    double lastTime = glfwGetTime();
+    size_t currentTime;
+    size_t lastTime = elapsedTime();
 
     while (running())
     {
@@ -43,10 +43,10 @@ void Demo::launch(void)
         window->swapBuffers();
 
         // FPS count
-        currentTime = glfwGetTime();
+        currentTime = elapsedTime();
         nbFrames++;
-        if (currentTime - lastTime >= 1.0) {
-            FPS = 1.0 / double(nbFrames) * 100;
+        if (currentTime - lastTime >= 1000) {
+            FPS = nbFrames;
             nbFrames = 0;
             lastTime = currentTime;
         }
