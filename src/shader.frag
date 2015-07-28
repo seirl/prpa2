@@ -5,7 +5,8 @@ out vec3 fragColor;
 uniform vec2 iResolution;
 uniform float iGlobalTime;
 
-#define MAXSTEP 45.0
+#define MAXSTEP 100.0
+#define FAR     45.0
 #define SPEED   1.0
 #define DIST    9.0
 
@@ -17,7 +18,7 @@ uniform float iGlobalTime;
 #define BEAM_THICKNESS  0.01
 #define BEAM_WIDTH      0.05
 #define FLOOR_HEIGHT    1.5
-#define H_BEAM_HEIGTH   (FLOOR_HEIGHT - BEAM_WIDTH)
+#define H_BEAM_HEIGTH   (FLOOR_HEIGHT - BEAM_WIDTH - 0.1)
 
 #define B_WALL_ID   1
 #define R_WALL_ID   2
@@ -181,8 +182,9 @@ float beams(vec3 p)
 
 vec2 elevatorShaft(vec3 p)
 {
-    vec3 q = vec3(p.x, mod(p.y + FLOOR_HEIGHT, FLOOR_HEIGHT * 2.0) - FLOOR_HEIGHT, p.z);
-//    q = p;
+    vec3 q = vec3(p.x, mod(p.y + FLOOR_HEIGHT, FLOOR_HEIGHT * 2.0) -
+    FLOOR_HEIGHT, p.z);
+    //q = p;
 
     vec2 bwall = vec2(B_WALL_ID,  box(q - vec3(0.0, 0.0, -1.0),
         vec3(1.0, FLOOR_HEIGHT, WALL_THICKNESS)));
@@ -194,20 +196,37 @@ vec2 elevatorShaft(vec3 p)
         vec2(1.0 + WALL_THICKNESS, FLOOR_HEIGHT), WALL_THICKNESS));
     vec2 beams = vec2(BEAM_ID, beams(q));
 
-    vec2 ret = (bwall.y < rwall.y) ? bwall : rwall;
+    vec2 ret = (bwall.y < fwall.y) ? bwall : fwall;
     ret = (ret.y < lwall.y) ? ret : lwall;
-    ret = (ret.y < fwall.y) ? ret : fwall;
+    ret = (ret.y < rwall.y) ? ret : rwall;
     ret = (ret.y < beams.y) ? ret : beams;
 
     return ret;
+}
+
+vec2 elevator(vec3 p)
+{
+    /*vec2 bwall = vec2(B_WALL_ID,  box(q - vec3(0.0, 0.0, -1.0),
+        vec3(1.0, FLOOR_HEIGHT, WALL_THICKNESS)));
+    vec2 rwall = vec2(R_WALL_ID, box(q - vec3(-1.0, 0.0, 0.0),
+        vec3(WALL_THICKNESS, FLOOR_HEIGHT, 1.0)));
+    vec2 lwall = vec2(L_WALL_ID, box(q - vec3(1.0, 0.0, 0.0),
+        vec3(WALL_THICKNESS, FLOOR_HEIGHT, 1.0)));
+    vec2 fwall = vec2(F_WALL_ID, moonQuarter(q - vec3(0.0, 0.0, 1.0),
+        vec2(1.0 + WALL_THICKNESS, FLOOR_HEIGHT), WALL_THICKNESS));
+    vec2 beams = vec2(BEAM_ID, beams(q));*/
+
+    return vec2(17.0, 1.0);
 }
 
 vec2 map(vec3 p)
 {
     vec2 ground = vec2(0, plane(p - vec3(0.0, -2.0, 0.0), vec4(0.0, 1.0, 0.0, 0.0)));
     vec2 elevatorShaft = elevatorShaft(p);
+    vec2 elevator = elevator(p);
 
     vec2 ret = (ground.y < elevatorShaft.y) ? ground : elevatorShaft;
+    ret = (ret.y < elevator.y) ? ret : elevator;
 
     return ret;
 }
@@ -246,9 +265,9 @@ void main()
 
     float t = 0.0;
     vec2 res = vec2(-1.0, 1.0);
-    for (int i = 0; i < 100; i++)
+    for (int i = 0; i < MAXSTEP; i++)
     {
-        if (res.y < 0.0001 || t > MAXSTEP)
+        if (res.y < 0.0001 || t > FAR)
             break;
         res = map(ro + t * rd);
         t += res.y;
@@ -256,8 +275,8 @@ void main()
 
     vec3 light = vec3(0.57735);
 
-    // intersect a sphere
-    if (t <= MAXSTEP)
+    // intersect an object
+    if (t <= FAR)
     {
         vec3 pos = ro + t * rd;
         vec3 n = normal(pos);
