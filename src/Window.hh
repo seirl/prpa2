@@ -1,5 +1,4 @@
-#ifndef WINDOW_HH
-# define WINDOW_HH
+#pragma once
 
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
@@ -26,5 +25,3 @@ class Window
         static void error_callback(int error, const char* description);
         static void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods);
 };
-
-#endif /* !WINDOW_HH */

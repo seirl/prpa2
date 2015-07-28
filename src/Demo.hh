@@ -1,7 +1,5 @@
-#ifndef DEMO_HH
-# define DEMO_HH
-
-# include "Window.hh"
+#pragma once
+#include "Window.hh"
 
 class Demo
 {
@@ -29,5 +27,3 @@ class Demo
 
         double FPS;
 };
-
-#endif /* !DEMO_HH */

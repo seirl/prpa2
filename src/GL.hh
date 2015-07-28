@@ -1,9 +1,8 @@
-#ifndef GL_HH
-# define GL_HH
+#pragma once
 
-# include <GL/glew.h>
-# include <GLFW/glfw3.h>
-# include <string>
+#include <GL/glew.h>
+#include <GLFW/glfw3.h>
+#include <string>
 
 class GL
 {
@@ -13,5 +12,3 @@ class GL
     private:
         static std::string readFile(std::string& path);
 };
-
-#endif /* !GL_HH */
