@@ -248,6 +248,22 @@ void animate(inout vec3 ro, inout vec3 ta)
     ta.z = cos(iGlobalTime * SPEED * 0.2);
 }
 
+float softshadow( in vec3 ro, in vec3 rd, in float tmin, in float tmax )
+{
+    float res = 1.0;
+    float t = tmin;
+    for( int i=0; i<16; i++ )
+    {
+        float h = map( ro + rd*t ).x;
+        res = min( res, 8.0*h/t );
+        t += clamp( h, 0.02, 0.10 );
+        if(h < 0.001 || t > tmax)
+        break;
+    }
+    return clamp( res, 0.0, 1.0 );
+
+}
+
 void main()
 {
     vec2 uv = gl_FragCoord.xy / iResolution.xy;
@@ -267,38 +283,36 @@ void main()
     vec2 res = vec2(-1.0, 1.0);
     for (int i = 0; i < MAXSTEP; i++)
     {
-        if (res.y < 0.0001 || t > FAR)
+        if (res.y < 0.000001 || t > FAR)
             break;
         res = map(ro + t * rd);
         t += res.y;
     }
 
-    vec3 light = vec3(0.57735);
-
     // intersect an object
-    if (t <= FAR)
+    if (t > FAR)
     {
-        vec3 pos = ro + t * rd;
-        vec3 n = normal(pos);
-        // Point light
-        vec3 col = vec3(0.8) * clamp(dot(n, light), 0.0, 1.0);
-        // Directional ligth
-        col += vec3(0.2, 0.3, 0.4) * clamp(pos.z, 0.0, 1.0);
-        // Ambiant ligth
-        col += vec3(0.1);
-
-        // Color
-        col = mix(col, getMaterial(pos, res.x), 0.9);
-
-        // Reflection
-        vec3 ref = reflect(rd, n);
-
-        // Specular
-        float spec = pow(clamp(dot(light, ref), 0.0, 1.0), 16.0);
-        col += 1.0 * spec;
-
-        fragColor = vec3(col);
+        fragColor = vec3(0.5, 0.6, 0.7);
+        return;
     }
-    else
-        fragColor = vec3(0.0);
+
+    vec3 pos = ro + t * rd;
+    vec3 n = normal(pos);
+    vec3 ref = reflect(rd, n);
+    vec3 col = getMaterial(pos, res.x);
+
+    // Lights and shadows
+    vec3 light = normalize(vec3(0.5));
+    float amb = 0.1;
+    float dif = clamp(dot(n, light), 0.0, 1.0);
+    float spe = pow(clamp(dot(ref, light), 0.0, 1.0), 16.0);
+    float sha = softshadow(pos, light, 0.02, 2.5);
+    vec3 lcol = vec3(1.0, 0.9, 0.6);
+    vec3 lig = sha*dif*lcol + 2.*spe*lcol*dif + amb;
+    col *= lig;
+
+    // Fog
+    float fogval = exp(-pow(1.8*length(pos - ro)/FAR, 2.));
+
+    fragColor = mix(vec3(0.5, 0.6, 0.7), col, fogval);
 }
