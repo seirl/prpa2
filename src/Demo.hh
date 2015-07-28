@@ -26,6 +26,8 @@ class Demo
         GLuint vertexArrayID;
         GLuint quad;
         GLuint programID;
+
+        double FPS;
 };
 
 #endif /* !DEMO_HH */

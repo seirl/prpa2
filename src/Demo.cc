@@ -30,12 +30,26 @@ Demo::~Demo()
 void Demo::launch(void)
 {
     init();
+
+    int nbFrames = 0;
+    double currentTime;
+    double lastTime = glfwGetTime();
+
     while (running())
     {
         update();
         window->clear();
         render();
         window->swapBuffers();
+
+        // FPS count
+        currentTime = glfwGetTime();
+        nbFrames++;
+        if (currentTime - lastTime >= 1.0) {
+            FPS = 1.0 / double(nbFrames) * 100;
+            nbFrames = 0;
+            lastTime = currentTime;
+        }
     }
 }
 
@@ -85,6 +99,7 @@ void Demo::render(void)
     glUseProgram(programID);
     glUniform2f(glGetUniformLocation(programID, "iResolution"), window->get_w(), window->get_h());
     glUniform1f(glGetUniformLocation(programID, "iGlobalTime"), elapsedTime() / 1000.0f);
+    glUniform1f(glGetUniformLocation(programID, "FPS"), FPS);
 
     glDrawArrays(GL_TRIANGLES, 0, 6);
     glDisableVertexAttribArray(0);

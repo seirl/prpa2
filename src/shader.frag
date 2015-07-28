@@ -5,6 +5,8 @@ out vec3 fragColor;
 uniform vec2 iResolution;
 uniform float iGlobalTime;
 
+uniform float FPS;
+
 #define MAXSTEP 100.0
 #define FAR     45.0
 #define SPEED   1.0
@@ -25,6 +27,53 @@ uniform float iGlobalTime;
 #define L_WALL_ID   3
 #define F_WALL_ID   4
 #define BEAM_ID     5
+
+int numbers_display[10 * 5] =
+        int[](
+            7, 5, 5, 5, 7, // 0
+            6, 2, 2, 2, 7, // 1
+            6, 1, 2, 4, 7, // 2
+            7, 1, 3, 1, 7, // 3
+            2, 4, 7, 2, 2, // 4
+            7, 4, 6, 1, 6, // 5
+            7, 4, 7, 5, 7, // 6
+            7, 1, 3, 6, 4, // 7
+            7, 5, 7, 5, 7, // 8
+            7, 5, 7, 1, 7  // 9
+            );
+
+int dot_display[5] = int[](0, 0, 0, 0, 1); // .
+int f_display[5] = int[](7, 4, 6, 4, 4 ); // f
+int p_display[5] = int[](7, 5, 7, 4, 4); // p
+int s_display[5] = int[](3, 4, 2, 1, 6); // s
+int colon_display[5] = int[](0, 1, 0, 1, 0); // :
+
+float FPSDisplay(vec2 uv)
+{
+    uv -= vec2(1.,10.);
+    if ((uv.x < 0.) || (uv.x >= 32.) || (uv.y < 0.) || (uv.y >= 5.))
+        return -1.;
+
+    int i = 1;
+    int bit = int(pow(2., floor(32. - uv.x)));
+
+    int line = int(5 - uv.y);
+    i = f_display[line] << 28;
+    i |= p_display[line] << 24;
+    i |= s_display[line] << 20;
+
+    i |= colon_display[line] << 18;
+
+    i |= numbers_display[5 * int(mod((FPS / 100), 10)) + line] << 14;
+    i |= numbers_display[5 * int(mod((FPS / 10), 10)) + line] << 10;
+    i |= numbers_display[5 * int(mod(FPS, 10)) + line] << 6;
+    i |= dot_display[line] << 4;
+    i |= numbers_display[5 * int(mod(FPS * 10, 10)) + line];
+
+    i /= bit;
+
+    return float(i - 2 * (i / 2));
+}
 
 float noise(in vec2 p)
 {
@@ -266,9 +315,16 @@ float softshadow( in vec3 ro, in vec3 rd, in float tmin, in float tmax )
 
 void main()
 {
+
     vec2 uv = gl_FragCoord.xy / iResolution.xy;
     vec2 p = -1.0 + 2.0 * uv;
     p.x *= iResolution.x / iResolution.y;
+
+    float c = FPSDisplay(gl_FragCoord.xy / 5.);
+    if (c > 0.) {
+        fragColor = vec3(0.1, 1.0, 0.2);
+        return ;
+    }
 
     // Camera
     vec3 ro = vec3(0.0);
