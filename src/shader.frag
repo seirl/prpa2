@@ -160,6 +160,8 @@ int colon_display(int i)
 
 float FPSDisplay(vec2 uv)
 {
+    if ((uv.x < 0.) || (uv.x >= 32.) || (uv.y < 0.) || (uv.y >= 5.))
+        return -1.0;
     int i = 1;
     int bit = int(pow(2., floor(32. - uv.x)));
 
@@ -428,15 +430,11 @@ void main()
     vec2 p = -1.0 + 2.0 * uv;
     p.x *= iResolution.x / iResolution.y;
 
-    vec2 fpsuv = uv - vec2(1.,10.);
-    if (false && (fpsuv.x >= 0.) && (fpsuv.x < 32.) && (fpsuv.y >= 0.) && (fpsuv.y < 5.))
-    {
     float c = FPSDisplay(gl_FragCoord.xy / 5.);
     if (c > 0.)
     {
         fragColor = vec3(0.1, 1.0, 0.2);
         return;
-    }
     }
 
     // Camera
