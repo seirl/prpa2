@@ -425,7 +425,6 @@ float softshadow( in vec3 ro, in vec3 rd, in float tmin, in float tmax )
 
 void main()
 {
-
     vec2 uv = gl_FragCoord.xy / iResolution.xy;
     vec2 p = -1.0 + 2.0 * uv;
     p.x *= iResolution.x / iResolution.y;

@@ -30,26 +30,12 @@ Demo::~Demo()
 void Demo::launch(void)
 {
     init();
-
-    size_t nbFrames = 0;
-    size_t currentTime;
-    size_t lastTime = elapsedTime();
-
     while (running())
     {
         update();
         window->clear();
         render();
         window->swapBuffers();
-
-        // FPS count
-        currentTime = elapsedTime();
-        nbFrames++;
-        if (currentTime - lastTime >= 1000) {
-            FPS = nbFrames;
-            nbFrames = 0;
-            lastTime = currentTime;
-        }
     }
 }
 
@@ -88,7 +74,11 @@ void Demo::init(void)
 
 void Demo::update(void)
 {
+    static size_t lastTime = elapsedTime();
     window->poll_events();
+    size_t currentTime = elapsedTime();
+    FPS = 1000.0 / (currentTime - lastTime);
+    lastTime = currentTime;
 }
 
 void Demo::render(void)
