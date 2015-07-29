@@ -160,10 +160,6 @@ int colon_display(int i)
 
 float FPSDisplay(vec2 uv)
 {
-    uv -= vec2(1.,10.);
-    if ((uv.x < 0.) || (uv.x >= 32.) || (uv.y < 0.) || (uv.y >= 5.))
-        return -1.;
-
     int i = 1;
     int bit = int(pow(2., floor(32. - uv.x)));
 
@@ -413,15 +409,15 @@ float softshadow( in vec3 ro, in vec3 rd, in float tmin, in float tmax )
 {
     float res = 1.0;
     float t = tmin;
-    for( int i=0; i<16; i++ )
+    for(int i = 0; i < 16; i++)
     {
-        float h = map( ro + rd*t ).x;
-        res = min( res, 8.0*h/t );
-        t += clamp( h, 0.02, 0.10 );
+        float h = map(ro + rd * t).y;
+        res = min(res, 8.0 * h / t);
+        t += clamp(h, 0.02, 0.10);
         if(h < 0.001 || t > tmax)
-        break;
+            break;
     }
-    return clamp( res, 0.0, 1.0 );
+    return clamp(res, 0.0, 1.0);
 
 }
 
@@ -432,10 +428,15 @@ void main()
     vec2 p = -1.0 + 2.0 * uv;
     p.x *= iResolution.x / iResolution.y;
 
+    vec2 fpsuv = uv - vec2(1.,10.);
+    if (false && (fpsuv.x >= 0.) && (fpsuv.x < 32.) && (fpsuv.y >= 0.) && (fpsuv.y < 5.))
+    {
     float c = FPSDisplay(gl_FragCoord.xy / 5.);
-    if (c > 0.) {
+    if (c > 0.)
+    {
         fragColor = vec3(0.1, 1.0, 0.2);
-        return ;
+        return;
+    }
     }
 
     // Camera
@@ -470,11 +471,12 @@ void main()
     vec3 col = getMaterial(pos, res.x);
 
     // Lights and shadows
-    vec3 light = normalize(vec3(0.5));
+    vec3 light = vec3(0.0, iGlobalTime + 3.0, 0.0);
+    vec3 lightDir = normalize(light - pos);
     float amb = 0.1;
-    float dif = clamp(dot(n, light), 0.0, 1.0);
-    float spe = pow(clamp(dot(ref, light), 0.0, 1.0), 16.0);
-    float sha = softshadow(pos, light, 0.02, 2.5);
+    float dif = clamp(dot(n, lightDir), 0.0, 1.0);
+    float spe = pow(clamp(dot(ref, lightDir), 0.0, 1.0), 32.0);
+    float sha = softshadow(pos, lightDir, 0.02, 2.5);
     vec3 lcol = vec3(1.0, 0.9, 0.6);
     vec3 lig = sha*dif*lcol + 2.*spe*lcol*dif + amb;
     col *= lig;
