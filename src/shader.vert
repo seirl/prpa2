@@ -4,7 +4,6 @@ layout (location = 0) in vec3 inPos;
 
 uniform vec2 iResolution;
 uniform float iGlobalTime;
-
 uniform float FPS;
 
 void main()

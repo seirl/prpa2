@@ -4,17 +4,21 @@ out vec3 fragColor;
 
 uniform vec2 iResolution;
 uniform float iGlobalTime;
-
 uniform float FPS;
 
-#define MAXSTEP 100.0
-#define FAR     45.0
-#define SPEED   1.0
-#define DIST    9.0
+#define LIGHT       1
+#define SHADOWS     1
+#define FPSCOUNT    1
+#define TEXTURE     1
 
-#define PI      3.141592653589793
-#define PI_2    1.5707963267948966
-#define PI_4    0.7853981633974483
+#define MAXSTEP     100.0
+#define FAR         45.0
+#define SPEED       1.0
+#define DIST        9.0
+
+#define PI          3.141592653589793
+#define PI_2        1.5707963267948966
+#define PI_4        0.7853981633974483
 
 #define WALL_THICKNESS  0.02
 #define BEAM_THICKNESS  0.01
@@ -436,12 +440,14 @@ void main()
     vec2 p = -1.0 + 2.0 * uv;
     p.x *= iResolution.x / iResolution.y;
 
+#ifdef FPSCOUNT
     float c = FPSDisplay(gl_FragCoord.xy / 5.);
     if (c > 0.)
     {
         fragColor = vec3(0.1, 1.0, 0.2);
         return;
     }
+#endif
 
     // Camera
     vec3 ro = vec3(0.0);
@@ -472,18 +478,28 @@ void main()
     vec3 pos = ro + t * rd;
     vec3 n = normal(pos);
     vec3 ref = reflect(rd, n);
+#ifdef TEXTURE
     vec3 col = getMaterial(pos, res.x);
+#else
+    vec3 col = vec3(0.5);
+#endif
 
     // Lights and shadows
+#ifdef LIGHT
     vec3 light = vec3(0.0, iGlobalTime + 3.0, 0.0);
     vec3 lightDir = normalize(light - pos);
     float amb = 0.1;
     float dif = clamp(dot(n, lightDir), 0.0, 1.0);
     float spe = pow(clamp(dot(ref, lightDir), 0.0, 1.0), 32.0);
+# ifdef SHADOWS
     float sha = softshadow(pos, lightDir, 0.02, 2.5);
+# else
+    float sha = 1.0;
+# endif
     vec3 lcol = vec3(1.0, 0.9, 0.6);
     vec3 lig = sha * dif * lcol + 2.0 * spe * lcol * dif + amb;
     col *= lig;
+#endif
 
     // Fog
     float fogval = exp(-pow(1.8*length(pos - ro)/FAR, 2.0));
