@@ -229,7 +229,7 @@ vec3 getMaterial(vec3 p, float id)
         case F_WALL_ID:
             return vec3(0.1, 0.2, 0.4);
         case BEAM_ID:
-            return texStain(p.xzy, vec3(0.4), vec3(0.2), 64);
+            return vec3(0.2);
         case X_WINDOW_ID:
         case Z_WINDOW_ID:
             //return mix(vec3(0.2, 0.3, 0.8), , mod(id, 16) / 15.0);
@@ -278,10 +278,15 @@ float box(vec3 p, vec3 b)
     return length(max(abs(p) - b, 0.0));
 }
 
+float hollowedCylinder(vec3 p, vec2 h, float thickness)
+{
+    return max(cylinder(p, h), -cylinder(p - vec3(0.0, 0.1, 0.0),
+        vec2(h.x - thickness * 2.0, h.y + 0.2)));
+}
+
 float moonQuarter(vec3 p, vec2 h, float thickness)
 {
-    return max(max(cylinder(p, h),
-        - cylinder(p - vec3(0.0, 0.1, 0.0), vec2(h.x - thickness * 2.0, h.y + 0.2))),
+    return max(hollowedCylinder(p, h, thickness),
         box(p - vec3(0.0, 0.0, h.x * 0.5), vec3(1.0, h.y + 0.1, h.x * 0.5 + 0.1)));
 }
 
@@ -301,9 +306,11 @@ float hBeam(vec3 p, float l)
 
 float curvedHBeam(vec3 p)
 {
-    return min(moonQuarter(p, vec2(1.0 - WALL_THICKNESS, BEAM_WIDTH), BEAM_THICKNESS),
-    min(moonQuarter(p, vec2(1.0 - WALL_THICKNESS - BEAM_WIDTH * 2.0, BEAM_WIDTH), BEAM_THICKNESS),
-    moonQuarter(p, vec2(1.0 - WALL_THICKNESS, BEAM_THICKNESS), BEAM_WIDTH)));
+    return max(min(hollowedCylinder(p, vec2(1.0 - WALL_THICKNESS, BEAM_WIDTH), BEAM_THICKNESS),
+    min(hollowedCylinder(p, vec2(1.0 - WALL_THICKNESS - BEAM_WIDTH * 2.0, BEAM_WIDTH), BEAM_THICKNESS),
+    hollowedCylinder(p, vec2(1.0 - WALL_THICKNESS, BEAM_THICKNESS), BEAM_WIDTH))),
+    box(p - vec3(0.0, 0.0, (1.0 - WALL_THICKNESS) * 0.5), vec3(1.0, BEAM_WIDTH
+    + 0.1, (1.0 - WALL_THICKNESS) * 0.5 + 0.1)));
 }
 
 float beams(vec3 p)
@@ -411,7 +418,7 @@ float softshadow( in vec3 ro, in vec3 rd, in float tmin, in float tmax )
 {
     float res = 1.0;
     float t = tmin;
-    for(int i = 0; i < 16; i++)
+    for (int i = 0; i < 16; i++)
     {
         float h = map(ro + rd * t).y;
         res = min(res, 8.0 * h / t);
@@ -455,7 +462,7 @@ void main()
         t += res.y;
     }
 
-    // intersect an object
+    // do not intersect an object (far clip)
     if (t > FAR)
     {
         fragColor = vec3(0.5, 0.6, 0.7);
@@ -475,11 +482,11 @@ void main()
     float spe = pow(clamp(dot(ref, lightDir), 0.0, 1.0), 32.0);
     float sha = softshadow(pos, lightDir, 0.02, 2.5);
     vec3 lcol = vec3(1.0, 0.9, 0.6);
-    vec3 lig = sha*dif*lcol + 2.*spe*lcol*dif + amb;
+    vec3 lig = sha * dif * lcol + 2.0 * spe * lcol * dif + amb;
     col *= lig;
 
     // Fog
-    float fogval = exp(-pow(1.8*length(pos - ro)/FAR, 2.));
+    float fogval = exp(-pow(1.8*length(pos - ro)/FAR, 2.0));
 
     fragColor = mix(vec3(0.5, 0.6, 0.7), col, fogval);
 }
