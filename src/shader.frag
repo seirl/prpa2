@@ -28,25 +28,132 @@ uniform float FPS;
 #define F_WALL_ID   4
 #define BEAM_ID     5
 
-int numbers_display[10 * 5] =
-        int[](
-            7, 5, 5, 5, 7, // 0
-            6, 2, 2, 2, 7, // 1
-            6, 1, 2, 4, 7, // 2
-            7, 1, 3, 1, 7, // 3
-            2, 4, 7, 2, 2, // 4
-            7, 4, 6, 1, 6, // 5
-            7, 4, 7, 5, 7, // 6
-            7, 1, 3, 6, 4, // 7
-            7, 5, 7, 5, 7, // 8
-            7, 5, 7, 1, 7  // 9
-            );
+int numbers_display(int i)
+{
+    switch (i)
+    {
+        // 0
+        case 0: return 7;
+        case 1: return 5;
+        case 2: return 5;
+        case 3: return 5;
+        case 4: return 7;
+        // 1
+        case 5: return 6;
+        case 6: return 2;
+        case 7: return 2;
+        case 8: return 2;
+        case 9: return 7;
+        // 2
+        case 10: return 6;
+        case 11: return 1;
+        case 12: return 2;
+        case 13: return 4;
+        case 14: return 7;
+        // 3
+        case 15: return 7;
+        case 16: return 1;
+        case 17: return 3;
+        case 18: return 1;
+        case 19: return 7;
+        // 4
+        case 20: return 2;
+        case 21: return 4;
+        case 22: return 7;
+        case 23: return 2;
+        case 24: return 2;
+        // 5
+        case 25: return 7;
+        case 26: return 4;
+        case 27: return 6;
+        case 28: return 1;
+        case 29: return 6;
+        // 6
+        case 30: return 7;
+        case 31: return 4;
+        case 32: return 7;
+        case 33: return 5;
+        case 34: return 7;
+        // 7
+        case 35: return 7;
+        case 36: return 1;
+        case 37: return 3;
+        case 38: return 6;
+        case 39: return 4;
+        // 8
+        case 40: return 7;
+        case 41: return 5;
+        case 42: return 7;
+        case 43: return 5;
+        case 44: return 7;
+        // 9
+        case 45: return 7;
+        case 46: return 5;
+        case 47: return 7;
+        case 48: return 1;
+        case 49: return 7;
+    }
+}
 
-int dot_display[5] = int[](0, 0, 0, 0, 1); // .
-int f_display[5] = int[](7, 4, 6, 4, 4 ); // f
-int p_display[5] = int[](7, 5, 7, 4, 4); // p
-int s_display[5] = int[](3, 4, 2, 1, 6); // s
-int colon_display[5] = int[](0, 1, 0, 1, 0); // :
+int dot_display(int i)
+{
+    switch (i)
+    {
+        case 0: return 0;
+        case 1: return 0;
+        case 2: return 0;
+        case 3: return 0;
+        case 4: return 1;
+    }
+}
+
+int f_display(int i)
+{
+    switch (i)
+    {
+        case 0: return 7;
+        case 1: return 4;
+        case 2: return 6;
+        case 3: return 4;
+        case 4: return 4;
+    }
+}
+
+int p_display(int i)
+{
+    switch (i)
+    {
+        case 0: return 7;
+        case 1: return 5;
+        case 2: return 7;
+        case 3: return 4;
+        case 4: return 4;
+    }
+}
+
+int s_display(int i)
+{
+    switch (i)
+    {
+        case 0: return 3;
+        case 1: return 4;
+        case 2: return 2;
+        case 3: return 1;
+        case 4: return 6;
+    }
+}
+
+int colon_display(int i)
+{
+    switch (i)
+    {
+        case 0: return 0;
+        case 1: return 1;
+        case 2: return 0;
+        case 3: return 1;
+        case 4: return 0;
+    }
+}
 
 float FPSDisplay(vec2 uv)
 {
@@ -58,17 +165,17 @@ float FPSDisplay(vec2 uv)
     int bit = int(pow(2., floor(32. - uv.x)));
 
     int line = int(5 - uv.y);
-    i = f_display[line] << 28;
-    i |= p_display[line] << 24;
-    i |= s_display[line] << 20;
+    i = f_display(line) << 28;
+    i |= p_display(line) << 24;
+    i |= s_display(line) << 20;
 
-    i |= colon_display[line] << 18;
+    i |= colon_display(line) << 18;
 
-    i |= numbers_display[5 * int(mod((FPS / 100), 10)) + line] << 14;
-    i |= numbers_display[5 * int(mod((FPS / 10), 10)) + line] << 10;
-    i |= numbers_display[5 * int(mod(FPS, 10)) + line] << 6;
-    i |= dot_display[line] << 4;
-    i |= numbers_display[5 * int(mod(FPS * 10, 10)) + line];
+    i |= numbers_display(5 * int(mod((FPS / 100), 10)) + line) << 14;
+    i |= numbers_display(5 * int(mod((FPS / 10), 10)) + line) << 10;
+    i |= numbers_display(5 * int(mod(FPS, 10)) + line) << 6;
+    i |= dot_display(line) << 4;
+    i |= numbers_display(5 * int(mod(FPS * 10, 10)) + line);
 
     i /= bit;
 
