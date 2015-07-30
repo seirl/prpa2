@@ -23,7 +23,7 @@ class Demo
         void init(void);
         void update(void);
         void render(void);
-        void renderSound(void);
+        void renderSound(float time);
         bool running(void);
         size_t elapsedTime(void);
 

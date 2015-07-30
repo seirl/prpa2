@@ -44,7 +44,7 @@ void Demo::launch(void)
         if (now >= last + 1000)
         {
             last = now;
-            renderSound();
+            renderSound(now / 1000.0f);
         }
     }
 }
@@ -116,13 +116,13 @@ void Demo::render(void)
     glBindBuffer(GL_ARRAY_BUFFER, 0);
 }
 
-void Demo::renderSound()
+void Demo::renderSound(float time)
 {
     glEnableVertexAttribArray(0);
     glBindBuffer(GL_ARRAY_BUFFER, quad);
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, nullptr);
     glUseProgram(soundProgramID);
-    glUniform1f(glGetUniformLocation(soundProgramID, "iGlobalTime"), elapsedTime() / 1000.0f);
+    glUniform1f(glGetUniformLocation(soundProgramID, "iGlobalTime"), time);
     glUniform2f(glGetUniformLocation(soundProgramID, "iResolution"), sound_width, sound_height);
     glUniform1f(glGetUniformLocation(soundProgramID, "iSampleRate"), sound_sample_rate);
     glDrawArrays(GL_TRIANGLES, 0, 6);
