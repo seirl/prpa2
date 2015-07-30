@@ -10,11 +10,13 @@ uniform float FPS;
 #define SHADOWS
 #define FPSCOUNT
 #define TEXTURE
+// #define TRANSPARENCY
 
 #define MAXSTEP     100.0
 #define FAR         45.0
 #define SPEED       0.2
 #define DIST        9.0
+#define DETAIL      0.000001
 
 #define PI          3.141592653589793
 #define PI_2        1.5707963267948966
@@ -27,7 +29,7 @@ uniform float FPS;
 #define ELEVATOR_HEIGHT (FLOOR_HEIGHT * 0.85)
 #define H_BEAM_HEIGTH   (FLOOR_HEIGHT - BEAM_WIDTH - 0.1)
 
-// Transparancy = mod(id, 16)
+// Transparency = mod(id, 16)
 #define B_WALL_ID   0x10
 #define R_WALL_ID   0x20
 #define L_WALL_ID   0x30
@@ -224,9 +226,9 @@ vec3 texStain(vec3 p, vec3 c1, vec3 c2, float power)
     0.8, pow(fbm(p.xy) * p.z, power)));
 }
 
-vec3 getMaterial(vec3 p, int id, inout vec3 n, out float transparancy)
+vec3 getMaterial(vec3 p, int id, inout vec3 n, out float transparency)
 {
-    transparancy = mod(id, 16) / 15.0;
+    transparency = mod(id, 16) / 15.0;
     switch (id)
     {
         case B_WALL_ID:
@@ -248,7 +250,7 @@ vec3 getMaterial(vec3 p, int id, inout vec3 n, out float transparancy)
             vec3 ns = abs(n);
             if (ns.y > max(ns.x, ns.z))
             {
-                transparancy = 0.0;
+                transparency = 0.0;
                 return vec3(0.8);
             }
             else
@@ -504,6 +506,54 @@ float softshadow( in vec3 ro, in vec3 rd, in float tmin, in float tmax )
 
 }
 
+vec3 ray_marching(inout float t, vec3 ro, vec3 rd, out float transparency)
+{
+    vec2 res = vec2(-1.0, 1.0);
+    for (int i = 0; i < MAXSTEP; i++)
+    {
+        if (res.y < DETAIL || t > FAR)
+            break;
+        res = map(ro + t * rd);
+        t += res.y;
+    }
+
+    // do not intersect an object (far clip)
+    if (t > FAR)
+        return vec3(0.5, 0.6, 0.7);
+
+    vec3 pos = ro + t * rd;
+    vec3 n = normal(pos);
+    vec3 ref = reflect(rd, n);
+
+    transparency = 0.0;
+#ifdef TEXTURE
+    vec3 col = getMaterial(pos, int(res.x), n, transparency);
+#else
+    vec3 col = vec3(0.5);
+#endif
+
+    // Lights and shadows
+#ifdef LIGHT
+    vec3 light = vec3(0.0, 1.0, 0.0);
+    vec3 lightDir = normalize(light - pos);
+    float amb = 0.1;
+    float dif = clamp(dot(n, lightDir), 0.0, 1.0);
+    float spe = pow(clamp(dot(ref, lightDir), 0.0, 1.0), 32.0);
+
+# ifdef SHADOWS
+    float sha = softshadow(pos, lightDir, 0.02, 2.5);
+# else
+    float sha = 1.0;
+# endif
+
+    vec3 lcol = vec3(1.0, 0.9, 0.6);
+    vec3 lig = sha * dif * lcol * (1.0 + 2.0 * spe) + amb;
+    col *= lig;
+#endif
+
+    return col;
+}
+
 void main()
 {
     vec2 uv = gl_FragCoord.xy / iResolution.xy;
@@ -529,54 +579,31 @@ void main()
     vec3 rd = normalize(p.x*cr + p.y*cu + 1.0*cf);
 
     float t = 0.0;
-    vec2 res = vec2(-1.0, 1.0);
-    for (int i = 0; i < MAXSTEP; i++)
-    {
-        if (res.y < 0.000001 || t > FAR)
-            break;
-        res = map(ro + t * rd);
-        t += res.y;
-    }
-
-    // do not intersect an object (far clip)
-    if (t > FAR)
-    {
-        fragColor = vec3(0.5, 0.6, 0.7);
-        return;
-    }
-
-    vec3 pos = ro + t * rd;
-    vec3 n = normal(pos);
-    vec3 ref = reflect(rd, n);
+    float transparency;
+    vec3 col = ray_marching(t, ro, rd, transparency);
 
 #ifdef TEXTURE
-    float transparancy = 0.0;
-    vec3 col = getMaterial(pos, int(res.x), n, transparancy);
-#else
-    vec3 col = vec3(0.5);
-#endif
-
-    // Lights and shadows
-#ifdef LIGHT
-    vec3 light = vec3(0.0, 1.0, 0.0);
-    vec3 lightDir = normalize(light - pos);
-    float amb = 0.1;
-    float dif = clamp(dot(n, lightDir), 0.0, 1.0);
-    float spe = pow(clamp(dot(ref, lightDir), 0.0, 1.0), 32.0);
-
-# ifdef SHADOWS
-    float sha = softshadow(pos, lightDir, 0.02, 2.5);
-# else
-    float sha = 1.0;
+# ifdef TRANSPARENCY
+    vec3 pos = ro + t * rd;
+    if (transparency > 0)
+    {
+        float new_t = t + WALL_THICKNESS + DETAIL * 2; // Should multiply WALL_THICKNESS by something related to the angle between the camera and the wall
+        vec3 second_col = ray_marching(new_t, ro, rd, transparency);
+        /* // Not working, starts an infinite loop or something, makes X crash :D
+        vec3 second_col;
+        float second_transparency;
+        do
+        {
+            second_col = ray_marching(new_t, ro, rd, second_transparency);
+        } while (second_transparency > 0 || new_t > FAR);
+        */
+        col = mix(col, second_col, transparency / 16);
+    }
 # endif
-
-    vec3 lcol = vec3(1.0, 0.9, 0.6);
-    vec3 lig = sha * dif * lcol * (1.0 + 2.0 * spe) + amb;
-    col *= lig;
 #endif
 
     // Fog
-    float fogval = exp(-pow(1.8*length(pos - ro)/FAR, 2.0));
+    float fogval = exp(-pow(1.8*length(t * rd)/FAR, 2.0));
 
     fragColor = mix(vec3(0.5, 0.6, 0.7), col, fogval);
 }
