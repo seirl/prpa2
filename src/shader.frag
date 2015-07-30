@@ -35,7 +35,7 @@ uniform float FPS;
 #define L_WALL_ID   0x30
 #define F_WALL_ID   0x40
 #define BEAM_ID     0x50
-#define WINDOW_ID   0x6B
+#define WINDOW_ID   0x6A
 #define STRUCT_ID   0x70
 #define CABLE_ID    0x80
 #define METAL_ID    0x90
@@ -490,16 +490,22 @@ void animate(inout vec3 ro, inout vec3 ta)
     ro.x = 0.0;
 }
 
-float softshadow( in vec3 ro, in vec3 rd, in float tmin, in float tmax )
+float softshadow(in vec3 ro, in vec3 rd, in float tmin, in float tmax)
 {
     float res = 1.0;
     float t = tmin;
+    float transparency;
     for (int i = 0; i < 16; i++)
     {
-        float h = map(ro + rd * t).y;
-        res = min(res, 8.0 * h / t);
-        t += clamp(h, 0.02, 0.10);
-        if(h < 0.001 || t > tmax)
+        vec2 h = map(ro + rd * t);
+        if ((transparency = mod(int(h.x), 16) / 15.0)  > 0.0)
+        {
+                t += 0.10;
+                continue;
+        }
+        res = min(res, 8.0 * h.y / t);
+        t += clamp(h.y, 0.02, 0.10);
+        if(h.y < 0.001 || t > tmax)
             break;
     }
     return clamp(res, 0.0, 1.0);
@@ -541,7 +547,7 @@ vec3 ray_marching(inout float t, vec3 ro, vec3 rd, out float transparency)
     float spe = pow(clamp(dot(ref, lightDir), 0.0, 1.0), 32.0);
 
 # ifdef SHADOWS
-    float sha = softshadow(pos, lightDir, 0.02, 2.5);
+    float sha = softshadow(pos, lightDir, 0.02, length(light - pos));
 # else
     float sha = 1.0;
 # endif
