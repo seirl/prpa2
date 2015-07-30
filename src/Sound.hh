@@ -15,7 +15,7 @@ public:
     bool is_playing();
 
 private:
-	ALuint source_;
-	ALuint buffer_;
+    ALuint source_;
+    ALuint buffer_;
     ALCcontext* context_;
 };
