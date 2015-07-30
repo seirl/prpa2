@@ -40,7 +40,7 @@ float height;
 #define CABLE_ID    0x50
 #define METAL_ID    0x60
 #define DOORWAY_ID  0x70 // Should not be seen
-#define SCENE_ID    -0x1
+#define SCENE_ID    0x80
 
 int numbers_display(int i)
 {
@@ -484,7 +484,6 @@ vec2 elevator(vec3 p, float h)
 
 vec2 map(vec3 p)
 {
-   
     vec2 elevatorShaft = elevatorShaft(p);
     vec2 elevator = elevator(p, height);
     vec2 scene = vec2(SCENE_ID, box(p - vec3(0.0, height, ELEVATOR_HEIGHT * 4 + 2.5), vec3(ELEVATOR_HEIGHT * 4)));
