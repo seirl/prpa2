@@ -261,7 +261,7 @@ vec3 getMaterial(vec3 p, int id, inout vec3 n, out float transparency)
             return vec3(1.0, 0.0, 0.0);
         case GROUND_ID:
         default:
-            return vec3(0.2, 0.3, 0.8);
+            return vec3(0.0);
     }
 }
 
