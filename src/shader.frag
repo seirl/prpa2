@@ -485,6 +485,7 @@ vec2 map(vec3 p)
     vec2 ground = vec2(GROUND_ID, plane(p - vec3(0.0, -2.0, 0.0), vec4(0.0, 1.0, 0.0, 0.0)));
     vec2 elevatorShaft = elevatorShaft(p);
     vec2 elevator = elevator(p, height);
+    vec2 scene = vec2(SCENE_ID, box(p - vec3(0.0, height, ELEVATOR_HEIGHT * 4 + 2.5), vec3(ELEVATOR_HEIGHT * 4)));
 
     vec2 doorWay = vec2(DOORWAY_ID, sBox(p - vec3(0.0, height, 3.1 + sin(iGlobalTime)),
     vec3(0.8 - BEAM_THICKNESS, ELEVATOR_HEIGHT - BEAM_THICKNESS - 0.01, 1.0 - WALL_THICKNESS)));
