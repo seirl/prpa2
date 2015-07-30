@@ -510,13 +510,13 @@ vec3 normal(vec3 p, int id)
 
 void animate(inout vec3 ro, inout vec3 ta)
 {
+    ro.x = sin(iGlobalTime * SPEED) * 0.5;
     ro.y = height;
-    ro.x = 0.0;
-    ta.y = height - 0.0;
-    ta.x = 0.8;
-    ta.z = 0.3;
-    ro.z = sin(iGlobalTime * SPEED) * 0.5;
-    ro.x = 0.0;
+    ro.z = 0.0;
+
+    ta.x = 0.2;
+    ta.y = height;
+    ta.z = 0.8;
 }
 
 float softshadow(in vec3 ro, in vec3 rd, in float tmin, in float tmax)
