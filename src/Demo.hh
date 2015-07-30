@@ -1,6 +1,12 @@
 #pragma once
+
+#include <vector>
+
 #include "Window.hh"
 #include "Sound.hh"
+
+const size_t sound_width = 50;
+const size_t sound_height = 50;
 
 class Demo
 {
@@ -30,6 +36,8 @@ class Demo
 
         GLuint soundProgramID;
         GLuint soundBuffer;
+
+        std::vector<unsigned char> sound_data;
 
         float FPS;
 };

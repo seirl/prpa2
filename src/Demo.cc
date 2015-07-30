@@ -14,9 +14,10 @@ Demo& Demo::getInstance(void)
 }
 
 Demo::Demo()
+  : window(nullptr)
+  , vertexArrayID(0)
+  , sound_data(4 * sound_width * sound_height)
 {
-    window = nullptr;
-    vertexArrayID = 0;
 }
 
 Demo::~Demo()
@@ -30,6 +31,7 @@ Demo::~Demo()
 
 void Demo::launch(void)
 {
+    //size_t begin = 0;
     init();
     while (running())
     {
@@ -37,6 +39,8 @@ void Demo::launch(void)
         window->clear();
         render();
         window->swapBuffers();
+
+        renderSound();
     }
 }
 
@@ -113,9 +117,11 @@ void Demo::renderSound()
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, nullptr);
     glUseProgram(soundProgramID);
     glUniform1f(glGetUniformLocation(soundProgramID, "iGlobalTime"), elapsedTime() / 1000.0f);
-    glUniform1f(glGetUniformLocation(soundProgramID, "iWidth"), 42);
+    glUniform2f(glGetUniformLocation(soundProgramID, "iResolution"), sound_width, sound_height);
     glUniform1f(glGetUniformLocation(soundProgramID, "iSampleRate"), 54324);
     glDrawArrays(GL_TRIANGLES, 0, 6);
+
+    glReadPixels(0, 0, sound_width, sound_height, GL_RGBA, GL_UNSIGNED_BYTE, &sound_data[0]);
 
     glDisableVertexAttribArray(0);
     glBindBuffer(GL_ARRAY_BUFFER, 0);

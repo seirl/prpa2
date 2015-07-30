@@ -4,7 +4,7 @@ out vec4 fragColor;
 
 uniform float iGlobalTime;
 uniform float iSampleRate;
-uniform float iWidth;
+uniform float iResolution;
 
 #define tau 6.2831853071
 #define freqcoef 1.059463094359
@@ -150,7 +150,7 @@ vec2 mainSound(float time)
 
 void main()
 {
-    float t = iGlobalTime + 4.*(gl_FragCoord.y * iWidth + gl_FragCoord.x) / iSampleRate;
+    float t = iGlobalTime + 4.*(gl_FragCoord.y * iResolution.x + gl_FragCoord.x) / iSampleRate;
     vec4 r = vec4(mainSound(t).x,
                   mainSound(t + 1.0 / iSampleRate).x,
                   mainSound(t + 2.0 / iSampleRate).x,
