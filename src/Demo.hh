@@ -12,20 +12,20 @@ const size_t sound_sample_rate = 44100;
 class Demo
 {
     public:
-        static Demo& getInstance(void);
-        void launch(void);
-        void reloadShader(void);
+        static Demo& getInstance();
+        void launch();
+        void reloadShader();
 
     private:
         Demo();
         ~Demo();
 
-        void init(void);
-        void update(void);
-        void render(void);
+        void init();
+        void update();
+        void render();
         void renderSound(float time);
-        bool running(void);
-        size_t elapsedTime(void);
+        bool running();
+        size_t elapsedTime();
 
         static Demo* instance;
 

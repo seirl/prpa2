@@ -6,7 +6,7 @@
 
 Demo* Demo::instance = nullptr;
 
-Demo& Demo::getInstance(void)
+Demo& Demo::getInstance()
 {
     if (instance == nullptr)
         instance = new Demo();
@@ -29,7 +29,7 @@ Demo::~Demo()
     delete window;
 }
 
-void Demo::launch(void)
+void Demo::launch()
 {
     init();
     renderSound(0);
@@ -39,10 +39,13 @@ void Demo::launch(void)
         window->clear();
         render();
         window->swapBuffers();
+
+        if (!sound->is_playing())
+            renderSound(0);
     }
 }
 
-void Demo::reloadShader(void)
+void Demo::reloadShader()
 {
     programID = GL::loadShader("src/shader.vert",
                                "src/shader.frag");
@@ -51,7 +54,7 @@ void Demo::reloadShader(void)
                                     "src/sound_shader.frag");
 }
 
-void Demo::init(void)
+void Demo::init()
 {
     window = new Window(1280, 720, "PRPA2");
     sound = new Sound();
@@ -84,7 +87,7 @@ void Demo::init(void)
     reloadShader();
 }
 
-void Demo::update(void)
+void Demo::update()
 {
     static size_t lastTime = elapsedTime();
     window->poll_events();
@@ -93,7 +96,7 @@ void Demo::update(void)
     lastTime = currentTime;
 }
 
-void Demo::render(void)
+void Demo::render()
 {
     glEnableVertexAttribArray(0);
     glBindBuffer(GL_ARRAY_BUFFER, quad);
@@ -128,12 +131,12 @@ void Demo::renderSound(float time)
     sound->play_buffer(&sound_data[0], sound_data.size(), sound_sample_rate, AL_FORMAT_MONO8);
 }
 
-bool Demo::running(void)
+bool Demo::running()
 {
     return !window->should_close();
 }
 
-size_t Demo::elapsedTime(void)
+size_t Demo::elapsedTime()
 {
     static auto begin = std::chrono::high_resolution_clock::now();
     auto now = std::chrono::high_resolution_clock::now() - begin;

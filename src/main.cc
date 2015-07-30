@@ -1,5 +1,5 @@
 #include "Demo.hh"
-int main(void)
+int main()
 {
     Demo& demo = Demo::getInstance();
     demo.launch();
