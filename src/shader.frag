@@ -249,8 +249,10 @@ vec3 getMaterial(vec3 p, int id, inout vec3 n, out float transparency)
         case WINDOW_ID:
             vec3 ns = abs(n);
             if (ns.y > max(ns.x, ns.z))
-            {
+            { // floor or ceiling
                 transparency = 0.0;
+                if (n.y > 0.0) // floor
+                  return texStain(vec3(p.xz * 5., 1.0), vec3(0.0), vec3(1.0), 2);
                 return vec3(0.8);
             }
             else
