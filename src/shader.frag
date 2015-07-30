@@ -229,7 +229,7 @@ vec3 texStain(vec3 p, vec3 c1, vec3 c2, float power)
 vec3 texBeam(vec3 p)
 {
     return mix(vec3(0.1, 0.1, 0.1), vec3(0.3, 0.3, 0.3),
-    (fbm(floor(300.*(p.xy+p.yz))) + 1.0) / 2.0);
+            (fbm(floor(300.*(p.xy+p.yz))) + 1.0) / 2.0);
 }
 
 vec3 getMaterial(vec3 p, int id, inout vec3 n, out float transparency)
@@ -364,24 +364,23 @@ float vBeam(vec3 p, float l)
 {
     return min(box(p, vec3(BEAM_WIDTH, l, BEAM_THICKNESS)),
         min(box(p - vec3(BEAM_WIDTH, 0.0, 0.0), vec3(BEAM_THICKNESS, l, BEAM_WIDTH)),
-        box(p - vec3(-BEAM_WIDTH, 0.0, 0.0), vec3(BEAM_THICKNESS, l, BEAM_WIDTH))));
+                box(p - vec3(-BEAM_WIDTH, 0.0, 0.0), vec3(BEAM_THICKNESS, l, BEAM_WIDTH))));
 }
 
 float hBeam(vec3 p, float l)
 {
     return min(box(p, vec3(BEAM_WIDTH, BEAM_THICKNESS, l)),
         min(box(p - vec3(BEAM_WIDTH, 0.0, 0.0), vec3(BEAM_THICKNESS, BEAM_WIDTH, l)),
-        box(p - vec3(-BEAM_WIDTH, 0.0, 0.0), vec3(BEAM_THICKNESS, BEAM_WIDTH, l))));
+                box(p - vec3(-BEAM_WIDTH, 0.0, 0.0), vec3(BEAM_THICKNESS, BEAM_WIDTH, l))));
 }
 
 float curvedHBeam(vec3 p)
 {
     return max(min(hollowedCylinder(p, vec2(1.0 - WALL_THICKNESS, BEAM_WIDTH), BEAM_THICKNESS),
-    max(min(cylinder(p, vec2(1.0 - WALL_THICKNESS, BEAM_THICKNESS)),
-    cylinder(p, vec2(1.0 - WALL_THICKNESS - BEAM_WIDTH * 2.0, BEAM_WIDTH))),
-     -cylinder(p, vec2(1.0 - WALL_THICKNESS - BEAM_WIDTH * 2.0 -
-     BEAM_THICKNESS * 2.0, BEAM_WIDTH + 0.2)))),
-     box(p - vec3(0.0, 0.0, (1.0 - WALL_THICKNESS) * 0.5), vec3(1.0, BEAM_WIDTH + 0.1, (1.0 - WALL_THICKNESS) * 0.5)));
+            max(min(cylinder(p, vec2(1.0 - WALL_THICKNESS, BEAM_THICKNESS)),
+            cylinder(p, vec2(1.0 - WALL_THICKNESS - BEAM_WIDTH * 2.0, BEAM_WIDTH))),
+            -cylinder(p, vec2(1.0 - WALL_THICKNESS - BEAM_WIDTH * 2.0 - BEAM_THICKNESS * 2.0, BEAM_WIDTH + 0.2)))),
+            box(p - vec3(0.0, 0.0, (1.0 - WALL_THICKNESS) * 0.5), vec3(1.0, BEAM_WIDTH + 0.1, (1.0 - WALL_THICKNESS) * 0.5)));
 }
 
 float beams(vec3 p)
@@ -415,7 +414,7 @@ float beams(vec3 p)
     float b13 = hBeam(q, 0.15);
 
     return min(b1, min(b2, min(b3, min(b4, min(b5, min(b6, min(b7, min(b8,
-        min(b9, min(b10, min (b11, min(b12, b13))))))))))));
+            min(b9, min(b10, min (b11, min(b12, b13))))))))))));
 }
 
 float cables(vec3 p)
@@ -454,9 +453,9 @@ vec2 elevator(vec3 p, float h)
     float c1 = cylinder(p - vec3(0.0, h, 1.0), vec2(0.8, ELEVATOR_HEIGHT));
 
     float b2 = sBox(p - vec3(0.0, h, 0.2 + BEAM_THICKNESS), vec3(0.8 - BEAM_THICKNESS,
-    ELEVATOR_HEIGHT - BEAM_THICKNESS, 0.8));
+            ELEVATOR_HEIGHT - BEAM_THICKNESS, 0.8));
     float c2 = cylinder(p - vec3(0.0, h, 1.0), vec2(0.8 - BEAM_THICKNESS, ELEVATOR_HEIGHT -
-    BEAM_THICKNESS));
+            BEAM_THICKNESS));
 
     float hole = sBox(p - vec3(0.0, h + ELEVATOR_HEIGHT, 0.0), vec3(0.4));
 
@@ -488,7 +487,7 @@ vec2 map(vec3 p)
     vec2 scene = vec2(SCENE_ID, box(p - vec3(0.0, height, ELEVATOR_HEIGHT * 4 + 2.5), vec3(ELEVATOR_HEIGHT * 4)));
 
     vec2 doorWay = vec2(DOORWAY_ID, sBox(p - vec3(0.0, height, 3.1 + sin(iGlobalTime)),
-    vec3(0.8 - BEAM_THICKNESS, ELEVATOR_HEIGHT - BEAM_THICKNESS - 0.01, 1.0 - WALL_THICKNESS)));
+            vec3(0.8 - BEAM_THICKNESS, ELEVATOR_HEIGHT - BEAM_THICKNESS - 0.01, 1.0 - WALL_THICKNESS)));
 
     vec2 ret = (ground.y < elevatorShaft.y) ? ground : elevatorShaft;
     ret = (ret.y < elevator.y) ? ret : elevator;
