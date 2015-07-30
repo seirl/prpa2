@@ -24,6 +24,7 @@ uniform float FPS;
 #define BEAM_THICKNESS  0.01
 #define BEAM_WIDTH      0.05
 #define FLOOR_HEIGHT    1.5
+#define ELEVATOR_HEIGHT (FLOOR_HEIGHT * 0.85)
 #define H_BEAM_HEIGTH   (FLOOR_HEIGHT - BEAM_WIDTH - 0.1)
 
 // Transparancy = mod(id, 16)
@@ -201,11 +202,11 @@ float noise(in vec2 p)
     return 2.0 * (mix(mix(r.x, r.y, f.x), mix(r.z, r.w, f.x), f.y)) - 1.0;
 }
 
-mat2 m2 = mat2(0.80, 0.60, -0.60, 0.80);
+const mat2 m2 = mat2(0.80, 0.60, -0.60, 0.80);
 
 float fbm(in vec2 p)
 {
-    float z =2.0;
+    float z = 2.0;
     float rz = 0.0;
     for (float i = 1.0; i < 7.0; i++)
     {
@@ -223,9 +224,10 @@ vec3 texStain(vec3 p, vec3 c1, vec3 c2, float power)
     0.8, pow(fbm(p.xy) * p.z, power)));
 }
 
-vec3 getMaterial(vec3 p, float id)
+vec3 getMaterial(vec3 p, int id, inout vec3 n, out float transparancy)
 {
-    switch (int(floor(id)))
+    transparancy = mod(id, 16) / 15.0;
+    switch (id)
     {
         case B_WALL_ID:
             return texStain(p, vec3(1.0, 0.0, 0.0), vec3(0.125, 0.05, 0.1), 2);
@@ -243,7 +245,14 @@ vec3 getMaterial(vec3 p, float id)
         case CABLE_ID:
             return vec3(0.0);
         case WINDOW_ID:
-            //return mix(vec3(0.2, 0.3, 0.8), , mod(id, 16) / 15.0);
+            vec3 ns = abs(n);
+            if (ns.y > max(ns.x, ns.z))
+            {
+                transparancy = 0.0;
+                return vec3(0.8);
+            }
+            else
+                return vec3(0.2, 0.3, 0.8);
         default:
             return vec3(0.2, 0.3, 0.8);
     }
@@ -401,8 +410,8 @@ vec2 elevatorShaft(vec3 p)
     vec2 cables = vec2(CABLE_ID, cables(p));
 
     vec2 ret = (bwall.y < fwall.y) ? bwall : fwall;
-    //ret = (ret.y < lwall.y) ? ret : lwall;
-    //ret = (ret.y < rwall.y) ? ret : rwall;
+    ret = (ret.y < lwall.y) ? ret : lwall;
+    ret = (ret.y < rwall.y) ? ret : rwall;
     ret = (ret.y < beams.y) ? ret : beams;
     ret = (ret.y < cables.y) ? ret : cables;
 
@@ -411,22 +420,22 @@ vec2 elevatorShaft(vec3 p)
 
 vec2 elevator(vec3 p, float h)
 {
-    float b1 = sBox(p - vec3(0.0, h, 0.2), vec3(0.8, FLOOR_HEIGHT, 0.8));
-    float c1 = cylinder(p - vec3(0.0, h, 1.0), vec2(0.8, FLOOR_HEIGHT));
+    float b1 = sBox(p - vec3(0.0, h, 0.2), vec3(0.8, ELEVATOR_HEIGHT, 0.8));
+    float c1 = cylinder(p - vec3(0.0, h, 1.0), vec2(0.8, ELEVATOR_HEIGHT));
 
     float b2 = sBox(p - vec3(0.0, h, 0.2 + BEAM_THICKNESS), vec3(0.8 - BEAM_THICKNESS,
-    FLOOR_HEIGHT - BEAM_THICKNESS, 0.8));
-    float c2 = cylinder(p - vec3(0.0, h, 1.0), vec2(0.8 - BEAM_THICKNESS, FLOOR_HEIGHT -
+    ELEVATOR_HEIGHT - BEAM_THICKNESS, 0.8));
+    float c2 = cylinder(p - vec3(0.0, h, 1.0), vec2(0.8 - BEAM_THICKNESS, ELEVATOR_HEIGHT -
     BEAM_THICKNESS));
 
-    float hole = sBox(p - vec3(0.0, h + FLOOR_HEIGHT, 0.0), vec3(0.4));
+    float hole = sBox(p - vec3(0.0, h + ELEVATOR_HEIGHT, 0.0), vec3(0.4));
 
-    float s1 = cylinder(p - vec3(0.8 - WALL_THICKNESS * 0.5, h, 1.0 - WALL_THICKNESS * 0.5), vec2(WALL_THICKNESS, FLOOR_HEIGHT));
-    float s2 = cylinder(p - vec3(0.8 - WALL_THICKNESS * 0.5, h, -0.6 + WALL_THICKNESS * 0.5), vec2(WALL_THICKNESS, FLOOR_HEIGHT));
-    float s3 = cylinder(p - vec3(-0.8 + WALL_THICKNESS * 0.5, h, 1.0 - WALL_THICKNESS * 0.5), vec2(WALL_THICKNESS, FLOOR_HEIGHT));
-    float s4 = cylinder(p - vec3(-0.8 + WALL_THICKNESS * 0.5, h, -0.6 + WALL_THICKNESS * 0.5), vec2(WALL_THICKNESS, FLOOR_HEIGHT));
+    float s1 = cylinder(p - vec3(0.8 - WALL_THICKNESS * 0.5, h, 1.0 - WALL_THICKNESS * 0.5), vec2(WALL_THICKNESS, ELEVATOR_HEIGHT));
+    float s2 = cylinder(p - vec3(0.8 - WALL_THICKNESS * 0.5, h, -0.6 + WALL_THICKNESS * 0.5), vec2(WALL_THICKNESS, ELEVATOR_HEIGHT));
+    float s3 = cylinder(p - vec3(-0.8 + WALL_THICKNESS * 0.5, h, 1.0 - WALL_THICKNESS * 0.5), vec2(WALL_THICKNESS, ELEVATOR_HEIGHT));
+    float s4 = cylinder(p - vec3(-0.8 + WALL_THICKNESS * 0.5, h, -0.6 + WALL_THICKNESS * 0.5), vec2(WALL_THICKNESS, ELEVATOR_HEIGHT));
 
-    float b3 = box(p - vec3(0.8 - BEAM_THICKNESS * 0.5, h, 0.3), vec3(WALL_THICKNESS, FLOOR_HEIGHT - BEAM_THICKNESS, 0.2));
+    float b3 = box(p - vec3(0.8 - BEAM_THICKNESS * 0.5, h, 0.3), vec3(WALL_THICKNESS, ELEVATOR_HEIGHT - BEAM_THICKNESS, 0.2));
     float b4 = box(p - vec3(0.8 - WALL_THICKNESS * 2.0, h - 0.2, 0.3), vec3(WALL_THICKNESS, WALL_THICKNESS, 0.15));
     float c3 = hcylinder(p - vec3(0.8 - WALL_THICKNESS * 3.0, h - 0.2, 0.2), vec2(WALL_THICKNESS, 0.7));
 
@@ -450,7 +459,7 @@ vec2 map(vec3 p)
     vec2 elevator = elevator(p, h);
 
     vec2 doorWay = vec2(SCENE_ID, sBox(p - vec3(0.0, h, 3.0 + sin(iGlobalTime)),
-    vec3(0.8 - BEAM_THICKNESS, FLOOR_HEIGHT - BEAM_THICKNESS, 1.0 - WALL_THICKNESS)));
+    vec3(0.8 - BEAM_THICKNESS, ELEVATOR_HEIGHT - BEAM_THICKNESS - 0.01, 1.0 - WALL_THICKNESS)));
 
     vec2 ret = (ground.y < elevatorShaft.y) ? ground : elevatorShaft;
     ret = (ret.y < elevator.y) ? ret : elevator;
@@ -469,10 +478,10 @@ vec3 normal(vec3 p)
 
 void animate(inout vec3 ro, inout vec3 ta)
 {
-    float h = 0.0;
+    float h = 3.0;
     ro.y = h;
     ro.x = 0.0;
-    ta.y = h;
+    ta.y = h -3.0;
     ta.x = 0.8;
     ta.z = 0.3;
     ro.z = sin(iGlobalTime * SPEED) * 0.5;
@@ -541,7 +550,8 @@ void main()
     vec3 ref = reflect(rd, n);
 
 #ifdef TEXTURE
-    vec3 col = getMaterial(pos, res.x);
+    float transparancy = 0.0;
+    vec3 col = getMaterial(pos, int(res.x), n, transparancy);
 #else
     vec3 col = vec3(0.5);
 #endif
