@@ -31,21 +31,14 @@ Demo::~Demo()
 
 void Demo::launch(void)
 {
-    long int last = -99999;
     init();
+    renderSound(0);
     while (running())
     {
         update();
         window->clear();
         render();
         window->swapBuffers();
-
-        long int now = elapsedTime();
-        if (now >= last + 1000)
-        {
-            last = now;
-            renderSound(now / 1000.0f);
-        }
     }
 }
 
