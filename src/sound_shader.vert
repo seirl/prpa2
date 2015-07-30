@@ -4,7 +4,7 @@ in vec2 position;
 
 uniform float iGlobalTime;
 uniform float iSampleRate;
-uniform float iWidth;
+uniform vec2 iResolution;
 
 void main()
 {

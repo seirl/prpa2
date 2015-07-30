@@ -4,7 +4,7 @@ out vec4 fragColor;
 
 uniform float iGlobalTime;
 uniform float iSampleRate;
-uniform float iResolution;
+uniform vec2 iResolution;
 
 #define tau 6.2831853071
 #define freqcoef 1.059463094359
