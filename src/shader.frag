@@ -10,7 +10,7 @@ uniform float FPS;
 #define SHADOWS
 #define FPSCOUNT
 #define TEXTURE
-// #define TRANSPARENCY
+#define TRANSPARENCY
 
 #define MAXSTEP     100.0
 #define FAR         45.0
@@ -35,7 +35,7 @@ uniform float FPS;
 #define L_WALL_ID   0x30
 #define F_WALL_ID   0x40
 #define BEAM_ID     0x50
-#define WINDOW_ID   0x68
+#define WINDOW_ID   0x6B
 #define STRUCT_ID   0x70
 #define CABLE_ID    0x80
 #define METAL_ID    0x90
@@ -254,7 +254,7 @@ vec3 getMaterial(vec3 p, int id, inout vec3 n, out float transparency)
                 return vec3(0.8);
             }
             else
-                return vec3(0.2, 0.3, 0.8);
+                return vec3(0.1, 0.2, 0.5);
         default:
             return vec3(0.2, 0.3, 0.8);
     }
@@ -508,6 +508,7 @@ float softshadow( in vec3 ro, in vec3 rd, in float tmin, in float tmax )
 
 vec3 ray_marching(inout float t, vec3 ro, vec3 rd, out float transparency)
 {
+    transparency = 0.0;
     vec2 res = vec2(-1.0, 1.0);
     for (int i = 0; i < MAXSTEP; i++)
     {
@@ -525,7 +526,6 @@ vec3 ray_marching(inout float t, vec3 ro, vec3 rd, out float transparency)
     vec3 n = normal(pos);
     vec3 ref = reflect(rd, n);
 
-    transparency = 0.0;
 #ifdef TEXTURE
     vec3 col = getMaterial(pos, int(res.x), n, transparency);
 #else
@@ -585,19 +585,17 @@ void main()
 #ifdef TEXTURE
 # ifdef TRANSPARENCY
     vec3 pos = ro + t * rd;
-    if (transparency > 0)
+    if (transparency > 0.0)
     {
-        float new_t = t + WALL_THICKNESS + DETAIL * 2; // Should multiply WALL_THICKNESS by something related to the angle between the camera and the wall
-        vec3 second_col = ray_marching(new_t, ro, rd, transparency);
-        /* // Not working, starts an infinite loop or something, makes X crash :D
+        // Not working, starts an infinite loop or something, makes X crash :D
         vec3 second_col;
         float second_transparency;
         do
         {
-            second_col = ray_marching(new_t, ro, rd, second_transparency);
-        } while (second_transparency > 0 || new_t > FAR);
-        */
-        col = mix(col, second_col, transparency / 16);
+            t += WALL_THICKNESS; // Should multiply WALL_THICKNESS by something related to the angle between the camera and the wall
+            second_col = ray_marching(t, ro, rd, second_transparency);
+        } while (second_transparency > 0.0 || t > FAR);
+        col = mix(col, second_col, transparency);
     }
 # endif
 #endif
