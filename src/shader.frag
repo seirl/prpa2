@@ -30,12 +30,14 @@ uniform float FPS;
 #define H_BEAM_HEIGTH   (FLOOR_HEIGHT - BEAM_WIDTH - 0.1)
 
 // Transparency = mod(id, 16)
+#define GROUND_ID   0x00
 #define WALL_ID     0x10
 #define BEAM_ID     0x20
 #define WINDOW_ID   0x3A
 #define STRUCT_ID   0x40
 #define CABLE_ID    0x50
 #define METAL_ID    0x60
+#define DOORWAY_ID  0x70 // Should not be seen
 #define SCENE_ID    -0x1
 
 int numbers_display(int i)
@@ -251,6 +253,9 @@ vec3 getMaterial(vec3 p, int id, inout vec3 n, out float transparency)
             }
             else
                 return vec3(0.1, 0.2, 0.5);
+        case SCENE_ID:
+            return vec3(1.0, 0.0, 0.0);
+        case GROUND_ID:
         default:
             return vec3(0.2, 0.3, 0.8);
     }
@@ -475,18 +480,20 @@ vec2 elevator(vec3 p, float h)
 
 vec2 map(vec3 p)
 {
-    vec2 ground = vec2(0, plane(p - vec3(0.0, -2.0, 0.0), vec4(0.0, 1.0, 0.0, 0.0)));
+    vec2 ground = vec2(GROUND_ID, plane(p - vec3(0.0, -2.0, 0.0), vec4(0.0, 1.0, 0.0, 0.0)));
     vec2 elevatorShaft = elevatorShaft(p);
     // FIXME Annimation
     float h = 0.0;
     vec2 elevator = elevator(p, h);
+    vec2 scene = vec2(SCENE_ID, box(p - vec3(0.0, h, ELEVATOR_HEIGHT * 4 + 2.5), vec3(ELEVATOR_HEIGHT * 4)));
 
-    vec2 doorWay = vec2(SCENE_ID, sBox(p - vec3(0.0, h, 3.1 + sin(iGlobalTime)),
+    vec2 doorWay = vec2(DOORWAY_ID, sBox(p - vec3(0.0, h, 3.1 + sin(iGlobalTime)),
     vec3(0.8 - BEAM_THICKNESS, ELEVATOR_HEIGHT - BEAM_THICKNESS - 0.01, 1.0 - WALL_THICKNESS)));
 
     vec2 ret = (ground.y < elevatorShaft.y) ? ground : elevatorShaft;
     ret = (ret.y < elevator.y) ? ret : elevator;
     ret = (ret.y > -doorWay.y) ? ret : -doorWay;
+    ret = (ret.y < scene.y) ? ret : scene;
 
     return ret;
 }
