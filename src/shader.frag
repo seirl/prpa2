@@ -13,7 +13,7 @@ uniform float FPS;
 
 #define MAXSTEP     100.0
 #define FAR         45.0
-#define SPEED       1.0
+#define SPEED       0.2
 #define DIST        9.0
 
 #define PI          3.141592653589793
@@ -32,9 +32,10 @@ uniform float FPS;
 #define L_WALL_ID   0x30
 #define F_WALL_ID   0x40
 #define BEAM_ID     0x50
-#define X_WINDOW_ID 0x68
-#define Z_WINDOW_ID 0x78
+#define WINDOW_ID   0x68
+#define STRUCT_ID   0x70
 #define CABLE_ID    0x80
+#define SCENE_ID    -0x1
 
 int numbers_display(int i)
 {
@@ -235,10 +236,11 @@ vec3 getMaterial(vec3 p, float id)
             return vec3(0.1, 0.2, 0.4);
         case BEAM_ID:
             return vec3(0.2);
+        case STRUCT_ID:
+            return vec3(0.6);
         case CABLE_ID:
             return vec3(0.0);
-        case X_WINDOW_ID:
-        case Z_WINDOW_ID:
+        case WINDOW_ID:
             //return mix(vec3(0.2, 0.3, 0.8), , mod(id, 16) / 15.0);
         default:
             return vec3(0.2, 0.3, 0.8);
@@ -288,6 +290,12 @@ float infCylinder(vec3 p, vec3 dir, float r)
 float box(vec3 p, vec3 b)
 {
     return length(max(abs(p) - b, 0.0));
+}
+
+float sBox(vec3 p, vec3 b)
+{
+    vec3 d = abs(p) - b;
+    return min(max(d.x, max(d.y, d.z)), 0.0) + length(max(d, 0.0));
 }
 
 float hollowedCylinder(vec3 p, vec2 h, float thickness)
@@ -385,36 +393,53 @@ vec2 elevatorShaft(vec3 p)
     vec2 cables = vec2(CABLE_ID, cables(p));
 
     vec2 ret = (bwall.y < fwall.y) ? bwall : fwall;
-    ret = (ret.y < lwall.y) ? ret : lwall;
-    ret = (ret.y < rwall.y) ? ret : rwall;
+    //ret = (ret.y < lwall.y) ? ret : lwall;
+    //ret = (ret.y < rwall.y) ? ret : rwall;
     ret = (ret.y < beams.y) ? ret : beams;
     ret = (ret.y < cables.y) ? ret : cables;
 
     return ret;
 }
 
-vec2 elevator(vec3 p)
+vec2 elevator(vec3 p, float h)
 {
-    vec2 bwall = vec2(X_WINDOW_ID,  box(p - vec3(0.0, 0.0, -0.7),
-        vec3(1.0 - BEAM_WIDTH * 2.0, FLOOR_HEIGHT, BEAM_THICKNESS)));
-    vec2 rwall = vec2(Z_WINDOW_ID, box(p - vec3(-1.0 + BEAM_WIDTH * 2.0, 0.0, 0.0),
-        vec3(BEAM_THICKNESS, FLOOR_HEIGHT, 0.7)));
-    vec2 lwall = vec2(Z_WINDOW_ID, box(p - vec3(1.0 - BEAM_WIDTH * 2.0 , 0.0, 0.0),
-        vec3(BEAM_THICKNESS, FLOOR_HEIGHT, 0.7)));
-    vec2 fwall = vec2(X_WINDOW_ID, moonQuarter(p - vec3(0.0, 0.0, 0.7),
-        vec2(1.0 + WALL_THICKNESS - BEAM_WIDTH * 2.0 , FLOOR_HEIGHT), BEAM_THICKNESS));
+    float b1 = sBox(p - vec3(0.0, h, 0.2), vec3(0.8, FLOOR_HEIGHT, 0.8));
+    float c1 = cylinder(p - vec3(0.0, h, 1.0), vec2(0.8, FLOOR_HEIGHT));
 
-    return vec2(17.0, 1.0);
+    float b2 = sBox(p - vec3(0.0, h, 0.2 + BEAM_THICKNESS), vec3(0.8 - BEAM_THICKNESS,
+    FLOOR_HEIGHT - BEAM_THICKNESS, 0.8));
+    float c2 = cylinder(p - vec3(0.0, h, 1.0), vec2(0.8 - BEAM_THICKNESS, FLOOR_HEIGHT -
+    BEAM_THICKNESS));
+
+    float hole = sBox(p - vec3(0.0, h + FLOOR_HEIGHT, 0.0), vec3(0.4));
+
+    float s1 = cylinder(p -vec3(0.8 - WALL_THICKNESS * 0.5, h, 1.0 - WALL_THICKNESS * 0.5), vec2(WALL_THICKNESS, FLOOR_HEIGHT));
+    float s2 = cylinder(p -vec3(0.8 - WALL_THICKNESS * 0.5, h, -0.6 + WALL_THICKNESS * 0.5), vec2(WALL_THICKNESS, FLOOR_HEIGHT));
+    float s3 = cylinder(p -vec3(-0.8 + WALL_THICKNESS * 0.5, h, 1.0 - WALL_THICKNESS * 0.5), vec2(WALL_THICKNESS, FLOOR_HEIGHT));
+    float s4 = cylinder(p -vec3(-0.8 + WALL_THICKNESS * 0.5, h, -0.6 + WALL_THICKNESS * 0.5), vec2(WALL_THICKNESS, FLOOR_HEIGHT));
+
+    vec2 walls = vec2(WINDOW_ID, max(-hole, max(-min(b2, c2), min(b1, c1))));
+    vec2 structure = vec2(STRUCT_ID, min(s1, min(s2, min(s3, s4))));
+
+    vec2 ret = (walls.y < structure.y) ? walls : structure;
+
+    return ret;
 }
 
 vec2 map(vec3 p)
 {
     vec2 ground = vec2(0, plane(p - vec3(0.0, -2.0, 0.0), vec4(0.0, 1.0, 0.0, 0.0)));
     vec2 elevatorShaft = elevatorShaft(p);
-    vec2 elevator = elevator(p);
+    // FIXME Annimation
+    float h = 0.0;
+    vec2 elevator = elevator(p, h);
+
+    vec2 doorWay = vec2(SCENE_ID, sBox(p - vec3(0.0, h, 3.0 + sin(iGlobalTime)),
+    vec3(0.8 - BEAM_THICKNESS, FLOOR_HEIGHT - BEAM_THICKNESS, 1.0 - WALL_THICKNESS)));
 
     vec2 ret = (ground.y < elevatorShaft.y) ? ground : elevatorShaft;
     ret = (ret.y < elevator.y) ? ret : elevator;
+    ret = (ret.y > -doorWay.y) ? ret : -doorWay;
 
     return ret;
 }
@@ -429,11 +454,13 @@ vec3 normal(vec3 p)
 
 void animate(inout vec3 ro, inout vec3 ta)
 {
-    float h = iGlobalTime;
+    float h = 3.0;
     ro.y = h;
-    ta.x = sin(iGlobalTime * SPEED * 0.2);
-    ta.y = h + 3.0;
-    ta.z = cos(iGlobalTime * SPEED * 0.2);
+    ro.x = 0.0;
+    ta.xz = vec2(0.0);
+    ta.y = h - 1.5;
+    ro.z = sin(iGlobalTime * SPEED) * 3.0;
+    ro.x = cos(iGlobalTime * SPEED) * 3.0;
 }
 
 float softshadow( in vec3 ro, in vec3 rd, in float tmin, in float tmax )
@@ -469,12 +496,12 @@ void main()
 
     // Camera
     vec3 ro = vec3(0.0);
-    vec3 ta = vec3(1.0);
+    vec3 ta = vec3(0.0);
     animate(ro, ta);
     vec3 cf = normalize(ta - ro);
     vec3 cr = normalize(cross(cf, vec3(0.0, 1.0, 0.0)));
     vec3 cu = normalize(cross(cr, cf));
-    vec3 rd = normalize(p.x*cr + p.y*cu + 2.5*cf);
+    vec3 rd = normalize(p.x*cr + p.y*cu + 1.0*cf);
 
     float t = 0.0;
     vec2 res = vec2(-1.0, 1.0);
@@ -504,7 +531,7 @@ void main()
 
     // Lights and shadows
 #ifdef LIGHT
-    vec3 light = vec3(0.0, iGlobalTime + 3.0, 0.0);
+    vec3 light = vec3(0.0, 1.0, 0.0);
     vec3 lightDir = normalize(light - pos);
     float amb = 0.1;
     float dif = clamp(dot(n, lightDir), 0.0, 1.0);
