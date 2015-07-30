@@ -344,8 +344,7 @@ float sBox(vec3 p, vec3 b)
 
 float hollowedCylinder(vec3 p, vec2 h, float thickness)
 {
-    return max(cylinder(p, h), -cylinder(p - vec3(0.0, 0.1, 0.0),
-        vec2(h.x - thickness * 2.0, h.y + 0.2)));
+    return max(cylinder(p, h), -cylinder(p, vec2(h.x - thickness * 2.0, h.y + 0.2)));
 }
 
 float moonQuarter(vec3 p, vec2 h, float thickness)
@@ -371,10 +370,11 @@ float hBeam(vec3 p, float l)
 float curvedHBeam(vec3 p)
 {
     return max(min(hollowedCylinder(p, vec2(1.0 - WALL_THICKNESS, BEAM_WIDTH), BEAM_THICKNESS),
-    min(hollowedCylinder(p, vec2(1.0 - WALL_THICKNESS - BEAM_WIDTH * 2.0, BEAM_WIDTH), BEAM_THICKNESS),
-    hollowedCylinder(p, vec2(1.0 - WALL_THICKNESS, BEAM_THICKNESS), BEAM_WIDTH))),
-    box(p - vec3(0.0, 0.0, (1.0 - WALL_THICKNESS) * 0.5), vec3(1.0, BEAM_WIDTH
-    + 0.1, (1.0 - WALL_THICKNESS) * 0.5 + 0.1)));
+    max(min(cylinder(p, vec2(1.0 - WALL_THICKNESS, BEAM_THICKNESS)),
+    cylinder(p, vec2(1.0 - WALL_THICKNESS - BEAM_WIDTH * 2.0, BEAM_WIDTH))),
+     -cylinder(p, vec2(1.0 - WALL_THICKNESS - BEAM_WIDTH * 2.0 -
+     BEAM_THICKNESS * 2.0, BEAM_WIDTH + 0.2)))),
+     box(p - vec3(0.0, 0.0, (1.0 - WALL_THICKNESS) * 0.5), vec3(1.0, BEAM_WIDTH + 0.1, (1.0 - WALL_THICKNESS) * 0.5)));
 }
 
 float beams(vec3 p)
@@ -505,7 +505,7 @@ void animate(inout vec3 ro, inout vec3 ta)
     float h = 0.0;
     ro.y = h;
     ro.x = 0.0;
-    ta.y = h - 0.0;
+    ta.y = h;
     ta.x = 0.8;
     ta.z = 0.3;
     ro.z = sin(iGlobalTime * SPEED) * 0.5;
@@ -657,7 +657,7 @@ void main()
     vec3 cf = normalize(ta - ro);
     vec3 cr = normalize(cross(cf, vec3(0.0, 1.0, 0.0)));
     vec3 cu = normalize(cross(cr, cf));
-    vec3 rd = normalize(p.x*cr + p.y*cu + 1.0*cf);
+    vec3 rd = normalize(p.x * cr + p.y * cu + 1.0 * cf);
 
     float t = 0.0;
     float transparency;
