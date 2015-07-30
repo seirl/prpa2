@@ -483,7 +483,7 @@ void animate(inout vec3 ro, inout vec3 ta)
     float h = 3.0;
     ro.y = h;
     ro.x = 0.0;
-    ta.y = h -3.0;
+    ta.y = h - 3.0;
     ta.x = 0.8;
     ta.z = 0.3;
     ro.z = sin(iGlobalTime * SPEED) * 0.5;
@@ -560,6 +560,59 @@ vec3 ray_marching(inout float t, vec3 ro, vec3 rd, out float transparency)
     return col;
 }
 
+vec3 ray_marching2(inout float t, vec3 ro, vec3 rd)
+{
+    float transparency = 0.0;
+    vec2 res = vec2(-1.0, 1.0);
+    for (int i = 0; i < MAXSTEP; i++)
+    {
+        res = map(ro + t * rd);
+        t += res.y;
+        if (res.y < DETAIL && mod(int(res.x), 16) > 0)
+        {
+            t += 0.008;
+            continue;
+        }
+        if (res.y < DETAIL || t > FAR)
+            break;
+    }
+
+    // do not intersect an object (far clip)
+    if (t > FAR)
+        return vec3(0.5, 0.6, 0.7);
+
+    vec3 pos = ro + t * rd;
+    vec3 n = normal(pos);
+    vec3 ref = reflect(rd, n);
+
+#ifdef TEXTURE
+    vec3 col = getMaterial(pos, int(res.x), n, transparency);
+#else
+    vec3 col = vec3(0.5);
+#endif
+
+    // Lights and shadows
+#ifdef LIGHT
+    vec3 light = vec3(0.0, 1.0, 0.0);
+    vec3 lightDir = normalize(light - pos);
+    float amb = 0.1;
+    float dif = clamp(dot(n, lightDir), 0.0, 1.0);
+    float spe = pow(clamp(dot(ref, lightDir), 0.0, 1.0), 32.0);
+
+# ifdef SHADOWS
+    float sha = softshadow(pos, lightDir, 0.02, length(light - pos));
+# else
+    float sha = 1.0;
+# endif
+
+    vec3 lcol = vec3(1.0, 0.9, 0.6);
+    vec3 lig = sha * dif * lcol * (1.0 + 2.0 * spe) + amb;
+    col *= lig;
+#endif
+
+    return col;
+}
+
 void main()
 {
     vec2 uv = gl_FragCoord.xy / iResolution.xy;
@@ -595,12 +648,7 @@ void main()
     {
         // Not working, starts an infinite loop or something, makes X crash :D
         vec3 second_col;
-        float second_transparency;
-        do
-        {
-            t += WALL_THICKNESS; // Should multiply WALL_THICKNESS by something related to the angle between the camera and the wall
-            second_col = ray_marching(t, ro, rd, second_transparency);
-        } while (second_transparency > 0.0 || t > FAR);
+        second_col = ray_marching2(t, ro, rd);
         col = mix(col, second_col, transparency);
     }
 # endif
