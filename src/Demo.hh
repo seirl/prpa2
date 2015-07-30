@@ -16,6 +16,7 @@ class Demo
         void init(void);
         void update(void);
         void render(void);
+        void renderSound(void);
         bool running(void);
         size_t elapsedTime(void);
 
@@ -26,6 +27,9 @@ class Demo
         GLuint vertexArrayID;
         GLuint quad;
         GLuint programID;
+
+        GLuint soundProgramID;
+        GLuint soundBuffer;
 
         float FPS;
 };

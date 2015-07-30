@@ -7,8 +7,9 @@
 class GL
 {
     public:
-        static GLuint loadShader(std::string& vertex_file_path, std::string& fragment_file_path);
+        static GLuint loadShader(const std::string& vertex_file_path,
+                                 const std::string& fragment_file_path);
 
     private:
-        static std::string readFile(std::string& path);
+        static std::string readFile(const std::string& path);
 };

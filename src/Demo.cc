@@ -22,6 +22,7 @@ Demo::Demo()
 Demo::~Demo()
 {
     glDeleteProgram(programID);
+    glDeleteProgram(soundProgramID);
     glDeleteBuffers(1, &quad);
     glDeleteVertexArrays(1, &vertexArrayID);
     delete window;
@@ -41,8 +42,11 @@ void Demo::launch(void)
 
 void Demo::reloadShader(void)
 {
-    std::string vert("src/shader.vert"), frag("src/shader.frag");
-    programID = GL::loadShader(vert, frag);
+    programID = GL::loadShader("src/shader.vert",
+                               "src/shader.frag");
+
+    soundProgramID = GL::loadShader("src/sound_shader.vert",
+                                    "src/sound_shader.frag");
 }
 
 void Demo::init(void)
@@ -68,8 +72,14 @@ void Demo::init(void)
     glBindBuffer(GL_ARRAY_BUFFER, quad);
     glBufferData(GL_ARRAY_BUFFER, sizeof (quad_vertex_buffer), quad_vertex_buffer, GL_STATIC_DRAW);
 
-    std::string vert("src/shader.vert"), frag("src/shader.frag");
-    programID = GL::loadShader(vert, frag);
+
+    glGenBuffers(1, &soundBuffer);
+    glBindBuffer(GL_ARRAY_BUFFER, soundBuffer);
+    glBufferData(GL_ARRAY_BUFFER, sizeof (quad_vertex_buffer),
+            quad_vertex_buffer, GL_STATIC_DRAW);
+
+
+    reloadShader();
 }
 
 void Demo::update(void)
@@ -93,6 +103,20 @@ void Demo::render(void)
     glUniform1f(glGetUniformLocation(programID, "FPS"), FPS);
 
     glDrawArrays(GL_TRIANGLES, 0, 6);
+    glDisableVertexAttribArray(0);
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+}
+
+void Demo::renderSound()
+{
+    glEnableVertexAttribArray(0);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, nullptr);
+    glUseProgram(soundProgramID);
+    glUniform1f(glGetUniformLocation(soundProgramID, "iGlobalTime"), elapsedTime() / 1000.0f);
+    glUniform1f(glGetUniformLocation(soundProgramID, "iWidth"), 42);
+    glUniform1f(glGetUniformLocation(soundProgramID, "iSampleRate"), 54324);
+    glDrawArrays(GL_TRIANGLES, 0, 6);
+
     glDisableVertexAttribArray(0);
     glBindBuffer(GL_ARRAY_BUFFER, 0);
 }

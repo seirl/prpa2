@@ -4,7 +4,8 @@
 #include <vector>
 #include <algorithm>
 
-GLuint GL::loadShader(std::string& vertex_file_path, std::string& fragment_file_path)
+GLuint GL::loadShader(const std::string& vertex_file_path,
+                      const std::string& fragment_file_path)
 {
     GLuint vertex_shader_ID = glCreateShader(GL_VERTEX_SHADER);
     GLuint fragment_shader_ID = glCreateShader(GL_FRAGMENT_SHADER);
@@ -70,7 +71,7 @@ GLuint GL::loadShader(std::string& vertex_file_path, std::string& fragment_file_
     return program_ID;
 }
 
-std::string GL::readFile(std::string& path)
+std::string GL::readFile(const std::string& path)
 {
     std::ifstream file(path, std::ios_base::in);
     std::string res((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
