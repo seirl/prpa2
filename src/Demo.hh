@@ -1,6 +1,7 @@
 #pragma once
 
 #include <vector>
+#include <memory>
 
 #include "Window.hh"
 #include "Sound.hh"
@@ -16,10 +17,10 @@ class Demo
         void launch();
         void reloadShader();
 
-    private:
         Demo();
         ~Demo();
 
+    private:
         void init();
         void update();
         void render();
@@ -28,7 +29,7 @@ class Demo
         bool running();
         size_t elapsedTime();
 
-        static Demo* instance;
+        static std::unique_ptr<Demo> instance;
 
         Sound* sound;
         Window* window;

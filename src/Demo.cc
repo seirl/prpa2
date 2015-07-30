@@ -2,14 +2,15 @@
 
 #include <chrono>
 #include <string>
+#include <memory>
 #include "GL.hh"
 
-Demo* Demo::instance = nullptr;
+std::unique_ptr<Demo> Demo::instance;
 
 Demo& Demo::getInstance()
 {
-    if (instance == nullptr)
-        instance = new Demo();
+    if (!instance)
+        instance = std::make_unique<Demo>();
     return *instance;
 }
 
@@ -27,6 +28,7 @@ Demo::~Demo()
     glDeleteBuffers(1, &quad);
     glDeleteVertexArrays(1, &vertexArrayID);
     delete window;
+    delete sound;
 }
 
 void Demo::launch()

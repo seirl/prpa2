@@ -16,7 +16,7 @@ include_directories(${GLEW_INCLUDE_DIRS})
 include_directories(src)
 
 set(EXECUTABLE_OUTPUT_PATH ..)
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -g3")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++14 -g3")
 
 FILE(
     GLOB_RECURSE
