@@ -281,6 +281,7 @@ vec3 getNormalMap(vec3 p, int id)
     {
         case BEAM_ID:
         case STRUCT_ID:
+            return metalNormal(p);
         case METAL_ID:
             return metalNormal(p - vec3(0.0, height, 0.0));
         case CABLE_ID:
