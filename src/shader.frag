@@ -567,7 +567,7 @@ vec3 ray_marching(inout float t, vec3 ro, vec3 rd, out float transparency)
 
     // Lights and shadows
 #ifdef LIGHT
-    vec3 light = vec3(0.0, 1.0, 0.0);
+    vec3 light = vec3(0.0, 1.0 + height, 0.0);
     vec3 lightDir = normalize(light - pos);
     float amb = 0.1;
     float dif = clamp(dot(n, lightDir), 0.0, 1.0);
@@ -620,7 +620,7 @@ vec3 ray_marching2(inout float t, vec3 ro, vec3 rd)
 
     // Lights and shadows
 #ifdef LIGHT
-    vec3 light = vec3(0.0, 1.0, 0.0);
+    vec3 light = vec3(0.0, 1.0 + height, 0.0);
     vec3 lightDir = normalize(light - pos);
     float amb = 0.1;
     float dif = clamp(dot(n, lightDir), 0.0, 1.0);
@@ -655,6 +655,9 @@ void main()
     }
 #endif
 
+    float t = iGlobalTime / 10.;
+    height = 2.0 * FLOOR_HEIGHT * (0.5 * (tanh(10.0 * (mod(t, 1.0) - 0.5)) + 1.) + floor(t));
+
     // Camera
     vec3 ro = vec3(0.0);
     vec3 ta = vec3(0.0);
@@ -664,7 +667,7 @@ void main()
     vec3 cu = normalize(cross(cr, cf));
     vec3 rd = normalize(p.x * cr + p.y * cu + 1.0 * cf);
 
-    float t = 0.0;
+    t = 0.0;
     float transparency;
     vec3 col = ray_marching(t, ro, rd, transparency);
 
