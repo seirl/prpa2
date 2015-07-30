@@ -35,6 +35,7 @@ uniform float FPS;
 #define WINDOW_ID   0x68
 #define STRUCT_ID   0x70
 #define CABLE_ID    0x80
+#define METAL_ID    0x90
 #define SCENE_ID    -0x1
 
 int numbers_display(int i)
@@ -237,6 +238,7 @@ vec3 getMaterial(vec3 p, float id)
         case BEAM_ID:
             return vec3(0.2);
         case STRUCT_ID:
+        case METAL_ID:
             return vec3(0.6);
         case CABLE_ID:
             return vec3(0.0);
@@ -279,6 +281,12 @@ float smin(float a, float b, float k)
 float cylinder(vec3 p, vec2 h)
 {
     vec2 d = abs(vec2(length(p.xz), p.y)) - h;
+    return min(max(d.x, d.y), 0.0) + length(max(d, 0.0));
+}
+
+float hcylinder(vec3 p, vec2 h)
+{
+    vec2 d = abs(vec2(length(p.xy), p.z)) - h;
     return min(max(d.x, d.y), 0.0) + length(max(d, 0.0));
 }
 
@@ -413,15 +421,22 @@ vec2 elevator(vec3 p, float h)
 
     float hole = sBox(p - vec3(0.0, h + FLOOR_HEIGHT, 0.0), vec3(0.4));
 
-    float s1 = cylinder(p -vec3(0.8 - WALL_THICKNESS * 0.5, h, 1.0 - WALL_THICKNESS * 0.5), vec2(WALL_THICKNESS, FLOOR_HEIGHT));
-    float s2 = cylinder(p -vec3(0.8 - WALL_THICKNESS * 0.5, h, -0.6 + WALL_THICKNESS * 0.5), vec2(WALL_THICKNESS, FLOOR_HEIGHT));
-    float s3 = cylinder(p -vec3(-0.8 + WALL_THICKNESS * 0.5, h, 1.0 - WALL_THICKNESS * 0.5), vec2(WALL_THICKNESS, FLOOR_HEIGHT));
-    float s4 = cylinder(p -vec3(-0.8 + WALL_THICKNESS * 0.5, h, -0.6 + WALL_THICKNESS * 0.5), vec2(WALL_THICKNESS, FLOOR_HEIGHT));
+    float s1 = cylinder(p - vec3(0.8 - WALL_THICKNESS * 0.5, h, 1.0 - WALL_THICKNESS * 0.5), vec2(WALL_THICKNESS, FLOOR_HEIGHT));
+    float s2 = cylinder(p - vec3(0.8 - WALL_THICKNESS * 0.5, h, -0.6 + WALL_THICKNESS * 0.5), vec2(WALL_THICKNESS, FLOOR_HEIGHT));
+    float s3 = cylinder(p - vec3(-0.8 + WALL_THICKNESS * 0.5, h, 1.0 - WALL_THICKNESS * 0.5), vec2(WALL_THICKNESS, FLOOR_HEIGHT));
+    float s4 = cylinder(p - vec3(-0.8 + WALL_THICKNESS * 0.5, h, -0.6 + WALL_THICKNESS * 0.5), vec2(WALL_THICKNESS, FLOOR_HEIGHT));
+
+    float b3 = box(p - vec3(0.8 - BEAM_THICKNESS * 0.5, h, 0.3), vec3(WALL_THICKNESS, FLOOR_HEIGHT - BEAM_THICKNESS, 0.2));
+    float b4 = box(p - vec3(0.8 - WALL_THICKNESS * 2.0, h - 0.2, 0.3), vec3(WALL_THICKNESS, WALL_THICKNESS, 0.15));
+    float c3 = hcylinder(p - vec3(0.8 - WALL_THICKNESS * 3.0, h - 0.2, 0.2), vec2(WALL_THICKNESS, 0.7));
 
     vec2 walls = vec2(WINDOW_ID, max(-hole, max(-min(b2, c2), min(b1, c1))));
     vec2 structure = vec2(STRUCT_ID, min(s1, min(s2, min(s3, s4))));
 
+    vec2 panel = vec2(METAL_ID, min(b3, min(b4, c3)));
+
     vec2 ret = (walls.y < structure.y) ? walls : structure;
+    ret = (ret.y < panel.y) ? ret : panel;
 
     return ret;
 }
@@ -454,13 +469,14 @@ vec3 normal(vec3 p)
 
 void animate(inout vec3 ro, inout vec3 ta)
 {
-    float h = 3.0;
+    float h = 0.0;
     ro.y = h;
     ro.x = 0.0;
-    ta.xz = vec2(0.0);
-    ta.y = h - 1.5;
-    ro.z = sin(iGlobalTime * SPEED) * 3.0;
-    ro.x = cos(iGlobalTime * SPEED) * 3.0;
+    ta.y = h;
+    ta.x = 0.8;
+    ta.z = 0.3;
+    ro.z = sin(iGlobalTime * SPEED) * 0.5;
+    ro.x = 0.0;
 }
 
 float softshadow( in vec3 ro, in vec3 rd, in float tmin, in float tmax )
@@ -523,6 +539,7 @@ void main()
     vec3 pos = ro + t * rd;
     vec3 n = normal(pos);
     vec3 ref = reflect(rd, n);
+
 #ifdef TEXTURE
     vec3 col = getMaterial(pos, res.x);
 #else
@@ -536,11 +553,13 @@ void main()
     float amb = 0.1;
     float dif = clamp(dot(n, lightDir), 0.0, 1.0);
     float spe = pow(clamp(dot(ref, lightDir), 0.0, 1.0), 32.0);
+
 # ifdef SHADOWS
     float sha = softshadow(pos, lightDir, 0.02, 2.5);
 # else
     float sha = 1.0;
 # endif
+
     vec3 lcol = vec3(1.0, 0.9, 0.6);
     vec3 lig = sha * dif * lcol * (1.0 + 2.0 * spe) + amb;
     col *= lig;
