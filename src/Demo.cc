@@ -57,7 +57,7 @@ void Demo::reloadShader()
 
 void Demo::init()
 {
-    window = new Window(1280, 720, "PRPA2");
+    window = new Window(800, 600, "PRPA2");
     sound = new Sound();
 
     glGenVertexArrays(1, &vertexArrayID);

@@ -6,6 +6,8 @@ uniform vec2 iResolution;
 uniform float iGlobalTime;
 uniform float FPS;
 
+float height;
+
 #define LIGHT
 #define SHADOWS
 #define FPSCOUNT
@@ -278,7 +280,7 @@ vec3 getNormalMap(vec3 p, int id)
         case BEAM_ID:
         case STRUCT_ID:
         case METAL_ID:
-            return metalNormal(p);
+            return metalNormal(p - vec3(0.0, height, 0.0));
         case CABLE_ID:
             return cableNormal(p);
         default:
@@ -482,12 +484,9 @@ vec2 map(vec3 p)
 {
     vec2 ground = vec2(GROUND_ID, plane(p - vec3(0.0, -2.0, 0.0), vec4(0.0, 1.0, 0.0, 0.0)));
     vec2 elevatorShaft = elevatorShaft(p);
-    // FIXME Annimation
-    float h = 0.0;
-    vec2 elevator = elevator(p, h);
-    vec2 scene = vec2(SCENE_ID, box(p - vec3(0.0, h, ELEVATOR_HEIGHT * 4 + 2.5), vec3(ELEVATOR_HEIGHT * 4)));
+    vec2 elevator = elevator(p, height);
 
-    vec2 doorWay = vec2(DOORWAY_ID, sBox(p - vec3(0.0, h, 3.1 + sin(iGlobalTime)),
+    vec2 doorWay = vec2(DOORWAY_ID, sBox(p - vec3(0.0, height, 3.1 + sin(iGlobalTime)),
     vec3(0.8 - BEAM_THICKNESS, ELEVATOR_HEIGHT - BEAM_THICKNESS - 0.01, 1.0 - WALL_THICKNESS)));
 
     vec2 ret = (ground.y < elevatorShaft.y) ? ground : elevatorShaft;
@@ -509,10 +508,9 @@ vec3 normal(vec3 p, int id)
 
 void animate(inout vec3 ro, inout vec3 ta)
 {
-    float h = 0.0;
-    ro.y = h;
+    ro.y = height;
     ro.x = 0.0;
-    ta.y = h;
+    ta.y = height - 0.0;
     ta.x = 0.8;
     ta.z = 0.3;
     ro.z = sin(iGlobalTime * SPEED) * 0.5;
