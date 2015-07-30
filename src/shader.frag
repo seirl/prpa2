@@ -30,15 +30,12 @@ uniform float FPS;
 #define H_BEAM_HEIGTH   (FLOOR_HEIGHT - BEAM_WIDTH - 0.1)
 
 // Transparency = mod(id, 16)
-#define B_WALL_ID   0x10
-#define R_WALL_ID   0x20
-#define L_WALL_ID   0x30
-#define F_WALL_ID   0x40
-#define BEAM_ID     0x50
-#define WINDOW_ID   0x6A
-#define STRUCT_ID   0x70
-#define CABLE_ID    0x80
-#define METAL_ID    0x90
+#define WALL_ID     0x10
+#define BEAM_ID     0x20
+#define WINDOW_ID   0x3A
+#define STRUCT_ID   0x40
+#define CABLE_ID    0x50
+#define METAL_ID    0x60
 #define SCENE_ID    -0x1
 
 int numbers_display(int i)
@@ -231,14 +228,8 @@ vec3 getMaterial(vec3 p, int id, inout vec3 n, out float transparency)
     transparency = mod(id, 16) / 15.0;
     switch (id)
     {
-        case B_WALL_ID:
+        case WALL_ID:
             return texStain(p, vec3(1.0, 0.0, 0.0), vec3(0.125, 0.05, 0.1), 2);
-        case R_WALL_ID:
-            return vec3(0.8, 0.8, 0.1);
-        case L_WALL_ID:
-            return vec3(0.0, 0.5, 0.0);
-        case F_WALL_ID:
-            return vec3(0.1, 0.2, 0.4);
         case BEAM_ID:
             return vec3(0.2);
         case STRUCT_ID:
@@ -301,11 +292,15 @@ float hcylinder(vec3 p, vec2 h)
     return min(max(d.x, d.y), 0.0) + length(max(d, 0.0));
 }
 
-float infCylinder(vec3 p, vec3 dir, float r)
+float vInfCylinder(vec3 p, float r)
 {
-    return length(p * dir) - r;
+    return length(p.xz) - r;
 }
 
+float semiVInfCylinder(vec3 p, float r, float h)
+{
+    return (length(p.xz) - r) - min(p.y - h, 0.0);
+}
 float box(vec3 p, vec3 b)
 {
     return length(max(abs(p) - b, 0.0));
@@ -388,8 +383,8 @@ float beams(vec3 p)
 
 float cables(vec3 p)
 {
-    float c1 = infCylinder(p - vec3(0.1, 0.0, -0.8), vec3(1.0, 0.0, 1.0), 0.01);
-    float c2 = infCylinder(p - vec3(-0.1, 0.0, -0.8), vec3(1.0, 0.0, 1.0), 0.01);
+    float c1 = vInfCylinder(p - vec3(0.1, 0.0, -0.8), 0.01);
+    float c2 = vInfCylinder(p - vec3(-0.1, 0.0, -0.8), 0.01);
     return min(c1, c2);
 }
 
@@ -398,23 +393,19 @@ vec2 elevatorShaft(vec3 p)
     vec3 q = vec3(p.x, mod(p.y + FLOOR_HEIGHT, FLOOR_HEIGHT * 2.0) -
     FLOOR_HEIGHT, p.z);
     //q = p;
+    float b1 = box(q, vec3(1.0, FLOOR_HEIGHT, 1.0));
+    float c1 = cylinder(q - vec3(0.0, 0.0, 1.0), vec2(1.0, FLOOR_HEIGHT));
 
-    vec2 bwall = vec2(B_WALL_ID,  box(q - vec3(0.0, 0.0, -1.0),
-        vec3(1.0, FLOOR_HEIGHT, WALL_THICKNESS)));
-    vec2 rwall = vec2(R_WALL_ID, box(q - vec3(-1.0, 0.0, 0.0),
-        vec3(WALL_THICKNESS, FLOOR_HEIGHT, 1.0)));
-    vec2 lwall = vec2(L_WALL_ID, box(q - vec3(1.0, 0.0, 0.0),
-        vec3(WALL_THICKNESS, FLOOR_HEIGHT, 1.0)));
-    vec2 fwall = vec2(F_WALL_ID, moonQuarter(q - vec3(0.0, 0.0, 1.0),
-        vec2(1.0 + WALL_THICKNESS, FLOOR_HEIGHT), WALL_THICKNESS));
+    float b2 = sBox(q - vec3(0.0, 0.0, WALL_THICKNESS), vec3(1.0 - WALL_THICKNESS, FLOOR_HEIGHT + 0.2, 1.0));
+    float c2 = cylinder(q - vec3(0.0, 0.0, 1.0), vec2(1.0 - WALL_THICKNESS, FLOOR_HEIGHT + 0.2));
+
+    vec2 walls = vec2(WALL_ID, max(min(b1, c1), -min(b2, c2)));
+
     vec2 beams = vec2(BEAM_ID, beams(q));
 
     vec2 cables = vec2(CABLE_ID, cables(p));
 
-    vec2 ret = (bwall.y < fwall.y) ? bwall : fwall;
-    ret = (ret.y < lwall.y) ? ret : lwall;
-    ret = (ret.y < rwall.y) ? ret : rwall;
-    ret = (ret.y < beams.y) ? ret : beams;
+    vec2 ret = (walls.y < beams.y) ? walls : beams;
     ret = (ret.y < cables.y) ? ret : cables;
 
     return ret;
@@ -422,7 +413,7 @@ vec2 elevatorShaft(vec3 p)
 
 vec2 elevator(vec3 p, float h)
 {
-    float b1 = sBox(p - vec3(0.0, h, 0.2), vec3(0.8, ELEVATOR_HEIGHT, 0.8));
+    float b1 = box(p - vec3(0.0, h, 0.2), vec3(0.8, ELEVATOR_HEIGHT, 0.8));
     float c1 = cylinder(p - vec3(0.0, h, 1.0), vec2(0.8, ELEVATOR_HEIGHT));
 
     float b2 = sBox(p - vec3(0.0, h, 0.2 + BEAM_THICKNESS), vec3(0.8 - BEAM_THICKNESS,
@@ -460,7 +451,7 @@ vec2 map(vec3 p)
     float h = 0.0;
     vec2 elevator = elevator(p, h);
 
-    vec2 doorWay = vec2(SCENE_ID, sBox(p - vec3(0.0, h, 3.0 + sin(iGlobalTime)),
+    vec2 doorWay = vec2(SCENE_ID, sBox(p - vec3(0.0, h, 3.1 + sin(iGlobalTime)),
     vec3(0.8 - BEAM_THICKNESS, ELEVATOR_HEIGHT - BEAM_THICKNESS - 0.01, 1.0 - WALL_THICKNESS)));
 
     vec2 ret = (ground.y < elevatorShaft.y) ? ground : elevatorShaft;
@@ -480,10 +471,10 @@ vec3 normal(vec3 p)
 
 void animate(inout vec3 ro, inout vec3 ta)
 {
-    float h = 3.0;
+    float h = 0.0;
     ro.y = h;
     ro.x = 0.0;
-    ta.y = h - 3.0;
+    ta.y = h - 0.0;
     ta.x = 0.8;
     ta.z = 0.3;
     ro.z = sin(iGlobalTime * SPEED) * 0.5;
