@@ -1,8 +1,10 @@
 #version 330 core
 
-precision highp int;
-precision highp float;
-attribute vec2 position;
+in vec2 position;
+
+uniform float iGlobalTime;
+uniform float iSampleRate;
+uniform float iWidth;
 
 void main()
 {
