@@ -5,8 +5,8 @@
 #include "Window.hh"
 #include "Sound.hh"
 
-const size_t sound_width = 1280;
-const size_t sound_height = 640;
+const size_t sound_width = 596;
+const size_t sound_height = 596;
 const size_t sound_sample_rate = 44100;
 
 class Demo
