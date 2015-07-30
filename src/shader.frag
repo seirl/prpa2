@@ -219,8 +219,13 @@ float fbm(in vec2 p)
 
 vec3 texStain(vec3 p, vec3 c1, vec3 c2, float power)
 {
-    return mix(c1, c2, smoothstep(0.2,
-    0.8, pow(fbm(p.xy) * p.z, power)));
+    return mix(c1, c2, smoothstep(0.2, 0.8, pow(fbm(p.xy) * p.z, power)));
+}
+
+vec3 texBeam(vec3 p)
+{
+    return mix(vec3(0.1, 0.1, 0.1), vec3(0.3, 0.3, 0.3),
+    (fbm(floor(300.*(p.xy+p.yz))) + 1.0) / 2.0);
 }
 
 vec3 getMaterial(vec3 p, int id, inout vec3 n, out float transparency)
@@ -231,8 +236,8 @@ vec3 getMaterial(vec3 p, int id, inout vec3 n, out float transparency)
         case WALL_ID:
             return texStain(p, vec3(1.0, 0.0, 0.0), vec3(0.125, 0.05, 0.1), 2);
         case BEAM_ID:
-            return vec3(0.2);
         case STRUCT_ID:
+            return vec3(0.5);//texBeam(p);
         case METAL_ID:
             return vec3(0.6);
         case CABLE_ID:
@@ -248,6 +253,31 @@ vec3 getMaterial(vec3 p, int id, inout vec3 n, out float transparency)
                 return vec3(0.1, 0.2, 0.5);
         default:
             return vec3(0.2, 0.3, 0.8);
+    }
+}
+
+vec3 metalNormal(vec3 p)
+{
+  return texBeam(p);
+}
+
+vec3 cableNormal(vec3 p)
+{
+  return vec3(0.);
+}
+
+vec3 getNormalMap(vec3 p, int id)
+{
+    switch (id)
+    {
+        case BEAM_ID:
+        case STRUCT_ID:
+        case METAL_ID:
+            return metalNormal(p);
+        case CABLE_ID:
+            return cableNormal(p);
+        default:
+          return vec3(0.);
     }
 }
 
@@ -461,12 +491,13 @@ vec2 map(vec3 p)
     return ret;
 }
 
-vec3 normal(vec3 p)
+vec3 normal(vec3 p, int id)
 {
     vec2 e = vec2(0.0001, 0.0);
-    return normalize(vec3(map(p + e.xyy).y - map(p - e.xyy).y,
-                           map(p + e.yxy).y - map(p - e.yxy).y,
-                           map(p + e.yyx).y - map(p - e.yyx).y));
+    vec3 norm = normalize(vec3(map(p + e.xyy).y - map(p - e.xyy).y,
+                          map(p + e.yxy).y - map(p - e.yxy).y,
+                          map(p + e.yyx).y - map(p - e.yyx).y));
+    return normalize(norm + getNormalMap(p, id));
 }
 
 void animate(inout vec3 ro, inout vec3 ta)
@@ -520,7 +551,7 @@ vec3 ray_marching(inout float t, vec3 ro, vec3 rd, out float transparency)
         return vec3(0.5, 0.6, 0.7);
 
     vec3 pos = ro + t * rd;
-    vec3 n = normal(pos);
+    vec3 n = normal(pos, int(res.x));
     vec3 ref = reflect(rd, n);
 
 #ifdef TEXTURE
@@ -573,7 +604,7 @@ vec3 ray_marching2(inout float t, vec3 ro, vec3 rd)
         return vec3(0.5, 0.6, 0.7);
 
     vec3 pos = ro + t * rd;
-    vec3 n = normal(pos);
+    vec3 n = normal(pos, int(res.x));
     vec3 ref = reflect(rd, n);
 
 #ifdef TEXTURE
