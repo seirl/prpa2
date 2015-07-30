@@ -24,6 +24,7 @@ class Demo
         void update();
         void render();
         void renderSound(float time);
+        void playSoundBuffer();
         bool running();
         size_t elapsedTime();
 

@@ -33,6 +33,7 @@ void Demo::launch()
 {
     init();
     renderSound(0);
+    playSoundBuffer();
     while (running())
     {
         update();
@@ -41,7 +42,7 @@ void Demo::launch()
         window->swapBuffers();
 
         if (!sound->is_playing())
-            renderSound(0);
+            playSoundBuffer();
     }
 }
 
@@ -127,7 +128,10 @@ void Demo::renderSound(float time)
 
     glDisableVertexAttribArray(0);
     glBindBuffer(GL_ARRAY_BUFFER, 0);
+}
 
+void Demo::playSoundBuffer()
+{
     sound->play_buffer(&sound_data[0], sound_data.size(), sound_sample_rate, AL_FORMAT_MONO8);
 }
 
