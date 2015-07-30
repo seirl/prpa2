@@ -6,10 +6,10 @@ uniform vec2 iResolution;
 uniform float iGlobalTime;
 uniform float FPS;
 
-#define LIGHT       1
-#define SHADOWS     1
-#define FPSCOUNT    1
-#define TEXTURE     1
+#define LIGHT
+#define SHADOWS
+#define FPSCOUNT
+#define TEXTURE
 
 #define MAXSTEP     100.0
 #define FAR         45.0
@@ -34,6 +34,7 @@ uniform float FPS;
 #define BEAM_ID     0x50
 #define X_WINDOW_ID 0x68
 #define Z_WINDOW_ID 0x78
+#define CABLE_ID    0x80
 
 int numbers_display(int i)
 {
@@ -234,6 +235,8 @@ vec3 getMaterial(vec3 p, float id)
             return vec3(0.1, 0.2, 0.4);
         case BEAM_ID:
             return vec3(0.2);
+        case CABLE_ID:
+            return vec3(0.0);
         case X_WINDOW_ID:
         case Z_WINDOW_ID:
             //return mix(vec3(0.2, 0.3, 0.8), , mod(id, 16) / 15.0);
@@ -275,6 +278,11 @@ float cylinder(vec3 p, vec2 h)
 {
     vec2 d = abs(vec2(length(p.xz), p.y)) - h;
     return min(max(d.x, d.y), 0.0) + length(max(d, 0.0));
+}
+
+float infCylinder(vec3 p, vec3 dir, float r)
+{
+    return length(p * dir) - r;
 }
 
 float box(vec3 p, vec3 b)
@@ -351,6 +359,13 @@ float beams(vec3 p)
         min(b9, min(b10, min (b11, min(b12, b13))))))))))));
 }
 
+float cables(vec3 p)
+{
+    float c1 = infCylinder(p - vec3(0.1, 0.0, -0.8), vec3(1.0, 0.0, 1.0), 0.01);
+    float c2 = infCylinder(p - vec3(-0.1, 0.0, -0.8), vec3(1.0, 0.0, 1.0), 0.01);
+    return min(c1, c2);
+}
+
 vec2 elevatorShaft(vec3 p)
 {
     vec3 q = vec3(p.x, mod(p.y + FLOOR_HEIGHT, FLOOR_HEIGHT * 2.0) -
@@ -367,10 +382,13 @@ vec2 elevatorShaft(vec3 p)
         vec2(1.0 + WALL_THICKNESS, FLOOR_HEIGHT), WALL_THICKNESS));
     vec2 beams = vec2(BEAM_ID, beams(q));
 
+    vec2 cables = vec2(CABLE_ID, cables(p));
+
     vec2 ret = (bwall.y < fwall.y) ? bwall : fwall;
     ret = (ret.y < lwall.y) ? ret : lwall;
     ret = (ret.y < rwall.y) ? ret : rwall;
     ret = (ret.y < beams.y) ? ret : beams;
+    ret = (ret.y < cables.y) ? ret : cables;
 
     return ret;
 }
