@@ -497,7 +497,7 @@ void main()
     float sha = 1.0;
 # endif
     vec3 lcol = vec3(1.0, 0.9, 0.6);
-    vec3 lig = sha * dif * lcol + 2.0 * spe * lcol * dif + amb;
+    vec3 lig = sha * dif * lcol * (1.0 + 2.0 * spe) + amb;
     col *= lig;
 #endif
 
