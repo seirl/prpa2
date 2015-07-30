@@ -481,7 +481,7 @@ vec2 elevator(vec3 p, float h)
 
 vec2 map(vec3 p)
 {
-    vec2 ground = vec2(GROUND_ID, plane(p - vec3(0.0, -2.0, 0.0), vec4(0.0, 1.0, 0.0, 0.0)));
+   
     vec2 elevatorShaft = elevatorShaft(p);
     vec2 elevator = elevator(p, height);
     vec2 scene = vec2(SCENE_ID, box(p - vec3(0.0, height, ELEVATOR_HEIGHT * 4 + 2.5), vec3(ELEVATOR_HEIGHT * 4)));
@@ -489,8 +489,7 @@ vec2 map(vec3 p)
     vec2 doorWay = vec2(DOORWAY_ID, sBox(p - vec3(0.0, height, 3.1 + sin(iGlobalTime)),
             vec3(0.8 - BEAM_THICKNESS, ELEVATOR_HEIGHT - BEAM_THICKNESS - 0.01, 1.0 - WALL_THICKNESS)));
 
-    vec2 ret = (ground.y < elevatorShaft.y) ? ground : elevatorShaft;
-    ret = (ret.y < elevator.y) ? ret : elevator;
+    vec2 ret = (elevator.y < elevatorShaft.y) ? elevator : elevatorShaft;
     ret = (ret.y > -doorWay.y) ? ret : -doorWay;
     ret = (ret.y < scene.y) ? ret : scene;
 
@@ -676,9 +675,7 @@ void main()
     vec3 pos = ro + t * rd;
     if (transparency > 0.0)
     {
-        // Not working, starts an infinite loop or something, makes X crash :D
-        vec3 second_col;
-        second_col = ray_marching2(t, ro, rd);
+        vec3 second_col = ray_marching2(t, ro, rd);
         col = mix(col, second_col, transparency);
     }
 # endif
