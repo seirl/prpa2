@@ -503,46 +503,19 @@ vec3 hell(vec3 rd_orig)
     return col;
 }
 
-/* void pouet(out vec4 fragColor, in vec2 fragCoord) */
-/* { */
-    /* vec2 q = fragCoord.xy / iResolution.xy; */
-    /* vec2 p = -1.0 + 2.0*q; */
-    /* p.x *= iResolution.x/ iResolution.y; */
-
-    /* vec2 mo = iMouse.xy / iResolution.xy; */
-    /* if( iMouse.w<=0.00001 ) mo=vec2(0.0); */
-
-    /* // camera */
-    /* vec3 ro = 4.0*normalize(vec3(cos(3.0*mo.x), 1.4 - 1.0*(mo.y-.1), sin(3.0*mo.x))); */
-    /* vec3 ta = vec3(0.0, 1.0, 0.0); */
-    /* float cr = 0.5*cos(0.7*iGlobalTime); */
-
-    /* // shake */
-    /* ro += 0.1*vec3(-1.0+2.0*kido_noise(iGlobalTime*vec2(0.010,0.014) )); */
-    /* ta += 0.1*(-1.0+2.0*kido_noise(iGlobalTime*vec2(0.013,0.008) )); */
-
-    /* // build ray */
-    /* vec3 ww = normalize( ta - ro); */
-    /* vec3 uu = normalize(cross( vec3(sin(cr),cos(cr),0.0), ww )); */
-    /* vec3 vv = normalize(cross(ww,uu)); */
-    /* vec3 rd = normalize( p.x*uu + p.y*vv + 2.0*ww ); */
-
-    /* // raymarch */
-    /* vec3 col = raymarch( ro, rd, fragCoord ); */
-
-    /* // contrast and vignetting */
-    /* col = col*0.5 + 0.5*col*col*(3.0-2.0*col); */
-    /* col *= 0.25 + 0.75*pow( 16.0*q.x*q.y*(1.0-q.x)*(1.0-q.y), 0.1 ); */
-
-    /* return col; */
-/* } */
-
-
 vec3 scene(vec3 ro, float t, vec3 rd)
 {
-    /* return cubes(ro, t, rd); */
-    /* return mandelbulb(ro, t, rd); */
-    return hell(rd);
+    int level = int(mod(round(height) / (6. * FLOOR_HEIGHT), 3.));
+
+    switch (level)
+    {
+    case 0:
+      return cubes(ro, t, rd);
+    case 1:
+      return mandelbulb(ro, t, rd);
+    case 2:
+      return hell(rd);
+    }
 }
 
 vec3 texMarble(vec3 p)
@@ -569,22 +542,12 @@ vec3 metalNormal(vec3 p)
   return texBeam(p);
 }
 
-vec3 cableNormal(vec3 p)
-{
-  return vec3(0.);
-}
-
 vec3 getNormalMap(vec3 p, int id)
 {
     switch (id)
     {
-        case BEAM_ID:
-        case STRUCT_ID:
-            return vec3(0.0);
         case METAL_ID:
             return metalNormal(p - vec3(0.0, height, 0.0));
-        case CABLE_ID:
-            return cableNormal(p);
         default:
           return vec3(0.);
     }
