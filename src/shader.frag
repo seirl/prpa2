@@ -232,39 +232,6 @@ vec3 texBeam(vec3 p)
             (fbm(floor(300.*(p.xy+p.yz))) + 1.0) / 2.0);
 }
 
-vec3 getMaterial(vec3 p, int id, inout vec3 n, out float transparency)
-{
-    transparency = mod(id, 16) / 15.0;
-    switch (id)
-    {
-        case WALL_ID:
-            return texStain(p, vec3(1.0, 0.0, 0.0), vec3(0.125, 0.05, 0.1), 2);
-        case BEAM_ID:
-        case STRUCT_ID:
-            return vec3(0.8);//texBeam(p);
-        case METAL_ID:
-            return vec3(0.6);
-        case CABLE_ID:
-            return vec3(0.0);
-        case WINDOW_ID:
-            vec3 ns = abs(n);
-            if (ns.y > max(ns.x, ns.z))
-            { // floor or ceiling
-                transparency = 0.0;
-                if (n.y > 0.0) // floor
-                  return texStain(vec3(p.xz * 5., 1.0), vec3(0.0), vec3(1.0), 2);
-                return vec3(0.8);
-            }
-            else
-                return vec3(0.1, 0.2, 0.5);
-        case SCENE_ID:
-            return vec3(1.0, 0.0, 0.0);
-        case GROUND_ID:
-        default:
-            return vec3(0.0);
-    }
-}
-
 vec3 metalNormal(vec3 p)
 {
   return texBeam(p);
@@ -290,6 +257,51 @@ vec3 getNormalMap(vec3 p, int id)
         default:
           return vec3(0.);
     }
+}
+
+vec3 getMaterial(in vec3 p, in int id, inout vec3 n, out float transparency)
+{
+    transparency = mod(id, 16) / 15.0;
+    vec3 ret = vec3(0.0);
+    switch (id)
+    {
+        case WALL_ID:
+            ret = texStain(p, vec3(1.0, 0.0, 0.0), vec3(0.125, 0.05, 0.1), 2);
+            break;
+        case BEAM_ID:
+        case STRUCT_ID:
+            ret = vec3(0.8);//texBeam(p);
+            break;
+        case METAL_ID:
+            ret = vec3(0.6);
+            break;
+        case CABLE_ID:
+            ret = vec3(0.0);
+            break;
+        case WINDOW_ID:
+            vec3 ns = abs(n);
+            if (ns.y > max(ns.x, ns.z))
+            { // floor or ceiling
+                transparency = 0.0;
+                if (n.y > 0.0) // floor
+                    ret = texStain(vec3(p.xz * 5., 1.0), vec3(0.0), vec3(1.0), 2);
+                else
+                    ret = vec3(0.8);
+            }
+            else
+                ret = vec3(0.1, 0.2, 0.5);
+            break;
+        case SCENE_ID:
+            ret = vec3(1.0, 0.0, 0.0);
+            break;
+        case GROUND_ID:
+        default:
+            ret = vec3(0.0);
+            break;
+    }
+    n += getNormalMap(p, id);
+    normalize(n);
+    return ret;
 }
 
 float sdCapsule(vec3 p, vec3 a, vec3 b, float r)
@@ -505,10 +517,9 @@ vec2 map(vec3 p)
 vec3 normal(vec3 p, int id)
 {
     vec2 e = vec2(0.0001, 0.0);
-    vec3 norm = normalize(vec3(map(p + e.xyy).y - map(p - e.xyy).y,
+    return normalize(vec3(map(p + e.xyy).y - map(p - e.xyy).y,
                           map(p + e.yxy).y - map(p - e.yxy).y,
                           map(p + e.yyx).y - map(p - e.yyx).y));
-    return normalize(norm + getNormalMap(p, id));
 }
 
 void animate(inout vec3 ro, inout vec3 ta)
