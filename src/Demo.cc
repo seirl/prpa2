@@ -34,8 +34,8 @@ Demo::~Demo()
 void Demo::launch()
 {
     init();
-    renderSound(0.0);
     begin = std::chrono::high_resolution_clock::now();
+    renderSound(elapsedTime());
     playSoundBuffer();
     while (running())
     {
@@ -45,7 +45,10 @@ void Demo::launch()
         window->swapBuffers();
 
         if (!sound->is_playing())
+        {
+            renderSound(elapsedTime());
             playSoundBuffer();
+        }
     }
 }
 
