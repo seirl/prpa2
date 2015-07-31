@@ -919,21 +919,24 @@ vec3 ray_marching(inout float t, vec3 ro, vec3 rd, out float transparency)
 
     // Lights and shadows
 #ifdef LIGHT
-    vec3 light = vec3(0.0, height + ELEVATOR_HEIGHT - 0.1, 0.0);
-    vec3 lightDir = normalize(light - pos);
-    float amb = 0.1;
-    float dif = clamp(dot(n, lightDir), 0.0, 1.0);
-    float spe = pow(clamp(dot(ref, lightDir), 0.0, 1.0), 32.0);
+    if (res.x != SCENE_ID)
+    {
+        vec3 light = vec3(0.0, height + ELEVATOR_HEIGHT - 0.1, 0.0);
+        vec3 lightDir = normalize(light - pos);
+        float amb = 0.1;
+        float dif = clamp(dot(n, lightDir), 0.0, 1.0);
+        float spe = pow(clamp(dot(ref, lightDir), 0.0, 1.0), 32.0);
 
 # ifdef SHADOWS
-    float sha = softshadow(pos, lightDir, 0.02, length(light - pos));
+        float sha = softshadow(pos, lightDir, 0.02, length(light - pos));
 # else
-    float sha = 1.0;
+        float sha = 1.0;
 # endif
 
-    vec3 lcol = vec3(1.0, 0.9, 0.6);
-    vec3 lig = sha * dif * lcol * (1.0 + 2.0 * spe) + amb;
-    col *= lig;
+        vec3 lcol = vec3(1.0, 0.9, 0.6);
+        vec3 lig = sha * dif * lcol * (1.0 + 2.0 * spe) + amb;
+        col *= lig;
+    }
 #endif
 
     return col;
@@ -972,21 +975,24 @@ vec3 ray_marching2(inout float t, vec3 ro, vec3 rd)
 
     // Lights and shadows
 #ifdef LIGHT
-    vec3 light = vec3(0.0, 1.0 + height, 0.0);
-    vec3 lightDir = normalize(light - pos);
-    float amb = 0.1;
-    float dif = clamp(dot(n, lightDir), 0.0, 1.0);
-    float spe = pow(clamp(dot(ref, lightDir), 0.0, 1.0), 32.0);
+    if (res.x != SCENE_ID)
+    {
+        vec3 light = vec3(0.0, 1.0 + height, 0.0);
+        vec3 lightDir = normalize(light - pos);
+        float amb = 0.1;
+        float dif = clamp(dot(n, lightDir), 0.0, 1.0);
+        float spe = pow(clamp(dot(ref, lightDir), 0.0, 1.0), 32.0);
 
 # ifdef SHADOWS
-    float sha = softshadow(pos, lightDir, 0.02, length(light - pos));
+        float sha = softshadow(pos, lightDir, 0.02, length(light - pos));
 # else
-    float sha = 1.0;
+        float sha = 1.0;
 # endif
 
-    vec3 lcol = vec3(1.0, 0.9, 0.6);
-    vec3 lig = sha * dif * lcol * (1.0 + 2.0 * spe) + amb;
-    col *= lig;
+        vec3 lcol = vec3(1.0, 0.9, 0.6);
+        vec3 lig = sha * dif * lcol * (1.0 + 2.0 * spe) + amb;
+        col *= lig;
+    }
 #endif
 
     return col;
