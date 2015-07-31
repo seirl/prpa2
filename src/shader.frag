@@ -470,6 +470,17 @@ vec3 getMaterial(vec3 ro, float t, vec3 rd, int id, inout vec3 n, out float tran
     }
 }
 
+vec3 texMarble(vec3 p)
+{
+    vec3 vain = texStain(vec3(p.xz * 5., 1.0), vec3(0.1, 0.05, 0.05), vec3(1.0, 1.0, 0.9), 2);
+    float s = min(smoothstep(0.0, 0.02, mod(-p.z, 0.5)), smoothstep(0.0, 0.02,
+    mod(p.z, 0.5)));
+    s = min(s, min(smoothstep(0.0, 0.02, mod(-p.x, 0.5)), smoothstep(0.0, 0.02,
+    mod(p.x, 0.5))));
+    s = clamp(s + 0.5, 0.0, 1.0);
+    return s * vain;
+}
+
 vec3 metalNormal(vec3 p)
 {
   return texBeam(p);
@@ -487,7 +498,6 @@ vec3 getNormalMap(vec3 p, int id)
         case BEAM_ID:
         case STRUCT_ID:
             return vec3(0.0);
- //           return metalNormal(p);
         case METAL_ID:
             return metalNormal(p - vec3(0.0, height, 0.0));
         case CABLE_ID:
@@ -497,8 +507,9 @@ vec3 getNormalMap(vec3 p, int id)
     }
 }
 
-vec3 getMaterial(in vec3 p, in int id, inout vec3 n, out float transparency)
+vec3 getMaterial(vec3 ro, float t, vec3 rd, int id, inout vec3 n, out float transparency)
 {
+    vec3 p = ro + t * rd;
     transparency = mod(id, 16) / 15.0;
     vec3 ret = vec3(0.0);
     switch (id)
@@ -522,7 +533,10 @@ vec3 getMaterial(in vec3 p, in int id, inout vec3 n, out float transparency)
             { // floor or ceiling
                 transparency = 0.0;
                 if (n.y > 0.0 && p.y < height) // floor
-                    ret = texStain(vec3(p.xz * 5., 1.0), vec3(0.0), vec3(1.0), 2);
+                {
+                    ret = texMarble(p);
+                    break;
+                }
                 else
                     ret = vec3(0.8);
             }
@@ -530,7 +544,7 @@ vec3 getMaterial(in vec3 p, in int id, inout vec3 n, out float transparency)
                 ret = vec3(0.1, 0.2, 0.5);
             break;
         case SCENE_ID:
-            ret = vec3(1.0, 0.0, 0.0);
+            ret = scene(ro, t, rd);
             break;
         case GROUND_ID:
         default:
@@ -724,7 +738,7 @@ vec2 elevator(vec3 p, float h)
     float c3 = hcylinder(p - vec3(0.8 - WALL_THICKNESS * 3.0, h - 0.2, 0.2), vec2(WALL_THICKNESS, 0.7));
 
     vec2 walls = vec2(WINDOW_ID, max(-hole, max(-min(b2, c2), min(b1, c1))));
-    vec2 structure = vec2(STRUCT_ID, min(s1, min(s2, min(s3, s4))));
+    vec2 structure = vec2(METAL_ID, min(s1, min(s2, min(s3, s4))));
     vec2 trapBorder = vec2(STRUCT_ID, max(-min(hole, b2), ceiling));
 
     vec2 panel = vec2(METAL_ID, min(b3, min(b4, c3)));
