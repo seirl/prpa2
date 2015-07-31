@@ -401,7 +401,7 @@ vec3 mandelbulb_intersect(in vec3 ro, in vec3 rd)
 
 vec3 mandelbulb(vec3 ro, float t, vec3 rd)
 {
-    ro = vec3(0.0, 0.0, ro.z - 1.5);
+    ro = vec3(0.5*cos(iGlobalTime), 0.5*sin(iGlobalTime), ro.z - 1.5);
     vec3 res = mandelbulb_intersect(ro, rd);
     vec3 sundir = normalize(vec3(0.1, 0.8, 0.6));
     vec3 sun = vec3(1.64, 1.27, 0.99);
