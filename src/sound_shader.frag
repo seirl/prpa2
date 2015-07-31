@@ -140,10 +140,6 @@ vec2 mainSound(float time)
     PLAY(kick, 0.5, 10.);
     PLAY(kick, 0.7, 10.);
 
-    // ding
-    t = mod(time - 3., 20.);
-    PLAY(ding, 0., 42.);
-
     total = max(3., total);
     return clamp(v/total, -1., 1.);
 }
