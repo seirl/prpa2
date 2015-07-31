@@ -232,6 +232,107 @@ vec3 texBeam(vec3 p)
             (fbm(floor(300.*(p.xy+p.yz))) + 1.0) / 2.0);
 }
 
+#define cubes_minStep 0.1
+#define cubes_maxStep 90.0
+#define cubes_delta 0.01
+#define cubes_damping 0.9
+#define cubes_numSteps 100
+
+float cubes_opRep(vec3 p, vec3 c , vec3 e)
+{
+    vec3 q = mod(p,c)-0.5*c;
+    vec3 d = abs(q) - e;
+    return min(max(d.x,max(d.y,d.z)),0.0) + length(max(d,0.0));
+}
+
+float cubes_distf (vec3 pos)
+{
+    return cubes_opRep(pos,vec3(2.0),vec3(0.2));
+}
+
+vec3 cubes_normal(vec3 p)
+{
+    vec2 dm = vec2(cubes_delta, 0.0);
+    return normalize(vec3(
+        cubes_distf(p+dm.xyy) - cubes_distf(p-dm.xyy),
+        cubes_distf(p+dm.yxy) - cubes_distf(p-dm.yxy),
+        cubes_distf(p+dm.yyx) - cubes_distf(p-dm.yyx)
+    ));
+}
+
+float cubes_castRay(vec3 pos, vec3 dir, out vec3 norm)
+{
+    pos.z += iGlobalTime * 3;
+    float dist = cubes_minStep;
+    for(int step = 0; step < cubes_numSteps; step++)
+    {
+        norm = pos + dir*dist;
+        float normL = cubes_distf(norm);
+        if(normL > cubes_delta || dist > cubes_maxStep){
+            dist += normL*cubes_damping;
+        }
+    }
+    return dist;
+}
+
+
+vec3 cubes(vec3 ro, float t, vec3 rd)
+{
+    vec3 orig = vec3(0.0,0.0,0.0);
+    float didHitTerrain = cubes_castRay(ro, rd, orig);
+    if(didHitTerrain < cubes_maxStep){
+        vec3 colToRtn = vec3(0.5);
+        vec3 nml = cubes_normal(orig);
+        //color correction
+        colToRtn.xyz = pow(nml.xyz, vec3(1.0/2.2));
+        colToRtn.xyz *= 0.5;
+        return colToRtn;
+    }
+    else{
+        return vec3(0);
+    }
+}
+
+vec3 scene(vec3 ro, float t, vec3 rd)
+{
+    return cubes(ro, t, rd);
+}
+
+vec3 getMaterial(vec3 ro, float t, vec3 rd, int id, inout vec3 n, out float transparency)
+{
+    vec3 pos = ro + t * rd;
+
+    transparency = mod(id, 16) / 15.0;
+    switch (id)
+    {
+        case WALL_ID:
+            return texStain(pos, vec3(1.0, 0.0, 0.0), vec3(0.125, 0.05, 0.1), 2);
+        case BEAM_ID:
+        case STRUCT_ID:
+            return vec3(0.5);//texBeam(pos);
+        case METAL_ID:
+            return vec3(0.6);
+        case CABLE_ID:
+            return vec3(0.0);
+        case WINDOW_ID:
+            vec3 ns = abs(n);
+            if (ns.y > max(ns.x, ns.z))
+            { // floor or ceiling
+                transparency = 0.0;
+                if (n.y > 0.0) // floor
+                  return texStain(vec3(pos.xz * 5., 1.0), vec3(0.0), vec3(1.0), 2);
+                return vec3(0.8);
+            }
+            else
+                return vec3(0.1, 0.2, 0.5);
+        case SCENE_ID:
+            return scene(ro, t, rd);
+        case GROUND_ID:
+        default:
+            return vec3(0.0);
+    }
+}
+
 vec3 metalNormal(vec3 p)
 {
   return texBeam(p);
@@ -576,7 +677,7 @@ vec3 ray_marching(inout float t, vec3 ro, vec3 rd, out float transparency)
     vec3 ref = reflect(rd, n);
 
 #ifdef TEXTURE
-    vec3 col = getMaterial(pos, int(res.x), n, transparency);
+    vec3 col = getMaterial(ro, t, rd, int(res.x), n, transparency);
 #else
     vec3 col = vec3(0.5);
 #endif
@@ -629,7 +730,7 @@ vec3 ray_marching2(inout float t, vec3 ro, vec3 rd)
     vec3 ref = reflect(rd, n);
 
 #ifdef TEXTURE
-    vec3 col = getMaterial(pos, int(res.x), n, transparency);
+    vec3 col = getMaterial(ro, t, rd, int(res.x), n, transparency);
 #else
     vec3 col = vec3(0.5);
 #endif
