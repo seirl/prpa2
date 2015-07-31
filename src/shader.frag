@@ -435,41 +435,6 @@ vec3 scene(vec3 ro, float t, vec3 rd)
     return mandelbulb(ro, t, rd);
 }
 
-vec3 getMaterial(vec3 ro, float t, vec3 rd, int id, inout vec3 n, out float transparency)
-{
-    vec3 pos = ro + t * rd;
-
-    transparency = mod(id, 16) / 15.0;
-    switch (id)
-    {
-        case WALL_ID:
-            return texStain(pos, vec3(1.0, 0.0, 0.0), vec3(0.125, 0.05, 0.1), 2);
-        case BEAM_ID:
-        case STRUCT_ID:
-            return vec3(0.5);
-        case METAL_ID:
-            return vec3(0.6);
-        case CABLE_ID:
-            return vec3(0.0);
-        case WINDOW_ID:
-            vec3 ns = abs(n);
-            if (ns.y > max(ns.x, ns.z))
-            { // floor or ceiling
-                transparency = 0.0;
-                if (n.y > 0.0) // floor
-                  return texStain(vec3(pos.xz * 5., 1.0), vec3(0.0), vec3(1.0), 2);
-                return vec3(0.8);
-            }
-            else
-                return vec3(0.1, 0.2, 0.5);
-        case SCENE_ID:
-            return scene(ro, t, rd);
-        case GROUND_ID:
-        default:
-            return vec3(0.0);
-    }
-}
-
 vec3 texMarble(vec3 p)
 {
     vec3 vain = texStain(vec3(p.xz * 5., 1.0), vec3(0.1, 0.05, 0.05), vec3(1.0, 1.0, 0.9), 2);
@@ -508,7 +473,7 @@ vec3 getNormalMap(vec3 p, int id)
 }
 
 vec3 getMaterial(vec3 ro, float t, vec3 rd, int id, inout vec3 n, out float transparency)
-{
+{   
     vec3 p = ro + t * rd;
     transparency = mod(id, 16) / 15.0;
     vec3 ret = vec3(0.0);
