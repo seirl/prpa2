@@ -556,6 +556,14 @@ vec3 texMarble(vec3 p)
     return s * vain;
 }
 
+vec3 texConcrete(vec3 p, vec3 n)
+{
+    vec3 coef = p * (1.0 - n);
+    vec2 uv = vec2(max(coef.x, coef.z), coef.y);
+
+    return vec3(0.0);
+}
+
 vec3 metalNormal(vec3 p)
 {
   return texBeam(p);
