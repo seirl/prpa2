@@ -205,6 +205,11 @@ float noise(in vec2 p)
     return 2.0 * (mix(mix(r.x, r.y, f.x), mix(r.z, r.w, f.x), f.y)) - 1.0;
 }
 
+float noise(in vec3 p)
+{
+    return noise(p.xy);
+}
+
 const mat2 m2 = mat2(0.80, 0.60, -0.60, 0.80);
 
 float fbm(in vec2 p)
@@ -322,9 +327,7 @@ vec3 mandelbulb_mb(vec3 p) {
     return vec3(0.5 * log(r) * r / dr, t0, 0.0);
 }
 
-
-
- float mandelbulb_softshadow(vec3 ro, vec3 rd, float k){
+float mandelbulb_softshadow(vec3 ro, vec3 rd, float k){
      float akuma=1.0,h=0.0;
      float t = 0.01;
      for(int i=0; i < 50; ++i){
@@ -429,10 +432,117 @@ vec3 mandelbulb(vec3 ro, float t, vec3 rd)
     return col;
 }
 
+vec4 hell_map( vec3 p )
+{
+    float den = 0.2 - p.y;
+
+    // invert space
+    p = -7.0*p/dot(p,p);
+
+    // twist space
+    float co = cos(den - 0.25*iGlobalTime);
+    float si = sin(den - 0.25*iGlobalTime);
+    p.xz = mat2(co,-si,si,co)*p.xz;
+
+    // smoke
+    float f;
+    vec3 q = p                          - vec3(0.0,1.0,0.0)*iGlobalTime;;
+    f  = 0.50000*noise( q ); q = q*2.02 - vec3(0.0,1.0,0.0)*iGlobalTime;
+    f += 0.25000*noise( q ); q = q*2.03 - vec3(0.0,1.0,0.0)*iGlobalTime;
+    f += 0.12500*noise( q ); q = q*2.01 - vec3(0.0,1.0,0.0)*iGlobalTime;
+    f += 0.06250*noise( q ); q = q*2.02 - vec3(0.0,1.0,0.0)*iGlobalTime;
+    f += 0.03125*noise( q );
+
+    den = clamp( den + 4.0*f, 0.0, 1.0 );
+
+    vec3 col = mix( vec3(1.0,0.9,0.8), vec3(0.4,0.15,0.1), den ) + 0.05*sin(p);
+
+    return vec4( col, den );
+}
+
+vec3 hell(vec3 rd_orig)
+{
+    vec2 q = gl_FragCoord.xy / iResolution.xy;
+    vec2 p = -1.0 + 2.0*q;
+    p.x *= iResolution.x/ iResolution.y;
+
+    vec3 ro = 4.0*normalize(vec3(1.0, 1.4 - 1.0*(-.1), 0.0));
+    vec3 ta = vec3(0.0, 0.0, 0.0);
+    float cr = 0.5*cos(0.7*iGlobalTime);
+
+    // build ray
+    vec3 ww = normalize( ta - ro);
+    vec3 uu = normalize(cross( vec3(sin(cr),cos(cr),0.0), ww ));
+    vec3 vv = normalize(cross(ww,uu));
+    vec3 rd = normalize( p.x*uu + p.y*vv + 2.0*ww );
+
+    vec4 sum = vec4( 0.0 );
+
+    float t = 0.0;
+
+    for( int i=0; i<100; i++ )
+    {
+        if( sum.a > 0.99 ) break;
+
+        vec3 pos = ro + t*rd;
+        vec4 col = hell_map( pos );
+
+        col.xyz *= mix( 3.1*vec3(1.0,0.5,0.05), vec3(0.48,0.53,0.5), clamp( (pos.y-0.2)/2.0, 0.0, 1.0 ) );
+
+        col.a *= 0.6;
+        col.rgb *= col.a;
+
+        sum = sum + col*(1.0 - sum.a);
+
+        t += 0.05;
+    }
+
+    vec3 col = clamp( sum.xyz, 0.0, 1.0 );
+    col = col*0.5 + 0.5*col*col*(3.0-2.0*col);
+    col *= 0.25 + 0.75*pow( 16.0*q.x*q.y*(1.0-q.x)*(1.0-q.y), 0.1 );
+    return col;
+}
+
+/* void pouet(out vec4 fragColor, in vec2 fragCoord) */
+/* { */
+    /* vec2 q = fragCoord.xy / iResolution.xy; */
+    /* vec2 p = -1.0 + 2.0*q; */
+    /* p.x *= iResolution.x/ iResolution.y; */
+
+    /* vec2 mo = iMouse.xy / iResolution.xy; */
+    /* if( iMouse.w<=0.00001 ) mo=vec2(0.0); */
+
+    /* // camera */
+    /* vec3 ro = 4.0*normalize(vec3(cos(3.0*mo.x), 1.4 - 1.0*(mo.y-.1), sin(3.0*mo.x))); */
+    /* vec3 ta = vec3(0.0, 1.0, 0.0); */
+    /* float cr = 0.5*cos(0.7*iGlobalTime); */
+
+    /* // shake */
+    /* ro += 0.1*vec3(-1.0+2.0*kido_noise(iGlobalTime*vec2(0.010,0.014) )); */
+    /* ta += 0.1*(-1.0+2.0*kido_noise(iGlobalTime*vec2(0.013,0.008) )); */
+
+    /* // build ray */
+    /* vec3 ww = normalize( ta - ro); */
+    /* vec3 uu = normalize(cross( vec3(sin(cr),cos(cr),0.0), ww )); */
+    /* vec3 vv = normalize(cross(ww,uu)); */
+    /* vec3 rd = normalize( p.x*uu + p.y*vv + 2.0*ww ); */
+
+    /* // raymarch */
+    /* vec3 col = raymarch( ro, rd, fragCoord ); */
+
+    /* // contrast and vignetting */
+    /* col = col*0.5 + 0.5*col*col*(3.0-2.0*col); */
+    /* col *= 0.25 + 0.75*pow( 16.0*q.x*q.y*(1.0-q.x)*(1.0-q.y), 0.1 ); */
+
+    /* return col; */
+/* } */
+
+
 vec3 scene(vec3 ro, float t, vec3 rd)
 {
-    //return cubes(ro, t, rd);
-    return mandelbulb(ro, t, rd);
+    /* return cubes(ro, t, rd); */
+    /* return mandelbulb(ro, t, rd); */
+    return hell(rd);
 }
 
 vec3 texMarble(vec3 p)
