@@ -1,5 +1,6 @@
 #pragma once
 
+#include <chrono>
 #include <vector>
 #include <memory>
 
@@ -41,6 +42,7 @@ class Demo
         GLuint soundBuffer;
 
         std::vector<unsigned char> sound_data;
+        std::chrono::time_point<std::chrono::high_resolution_clock> begin;
 
         float FPS;
 };

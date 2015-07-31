@@ -1,6 +1,5 @@
 #include "Demo.hh"
 
-#include <chrono>
 #include <string>
 #include <memory>
 #include "GL.hh"
@@ -18,6 +17,7 @@ Demo::Demo()
   : window(nullptr)
   , vertexArrayID(0)
   , sound_data(4 * sound_width * sound_height)
+  , begin(std::chrono::high_resolution_clock::now())
 {
 }
 
@@ -34,7 +34,8 @@ Demo::~Demo()
 void Demo::launch()
 {
     init();
-    renderSound(0);
+    renderSound(0.0);
+    begin = std::chrono::high_resolution_clock::now();
     playSoundBuffer();
     while (running())
     {
@@ -150,7 +151,6 @@ bool Demo::running()
 
 size_t Demo::elapsedTime()
 {
-    static auto begin = std::chrono::high_resolution_clock::now();
     auto now = std::chrono::high_resolution_clock::now() - begin;
     return std::chrono::duration_cast<std::chrono::milliseconds>(now).count();
 }
