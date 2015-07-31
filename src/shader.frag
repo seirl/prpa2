@@ -742,7 +742,8 @@ vec2 map(vec3 p)
     vec2 elevator = elevator(p, height);
     vec2 scene = vec2(SCENE_ID, box(p - vec3(0.0, height, ELEVATOR_HEIGHT * 4 + 2.5), vec3(ELEVATOR_HEIGHT * 4)));
 
-    vec2 doorWay = vec2(DOORWAY_ID, sBox(p - vec3(0.0, height, 3.1 + sin(iGlobalTime)),
+    float z = sin((iGlobalTime - 4.) * PI / 10.);
+    vec2 doorWay = vec2(DOORWAY_ID, sBox(p - vec3(0.0, height, 3.1 + z),
             vec3(0.8 - BEAM_THICKNESS, ELEVATOR_HEIGHT - BEAM_THICKNESS - 0.01, 1.0 - WALL_THICKNESS)));
 
     vec2 ret = (elevator.y < elevatorShaft.y) ? elevator : elevatorShaft;
@@ -909,8 +910,8 @@ void main()
     }
 #endif
 
-    float t = iGlobalTime / 10.;
-    height = 2.0 * FLOOR_HEIGHT * (0.5 * (tanh(10.0 * (mod(t, 1.0) - 0.5)) + 1.) + floor(t));
+    float t = iGlobalTime / 20.;
+    height = 6.0 * FLOOR_HEIGHT * (0.5 * (tanh(10.0 * (mod(t, 1.0) - 0.5)) + 1.) + floor(t));
 
     // Camera
     vec3 ro = vec3(0.0);
