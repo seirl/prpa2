@@ -283,7 +283,7 @@ vec3 getMaterial(in vec3 p, in int id, inout vec3 n, out float transparency)
             if (ns.y > max(ns.x, ns.z))
             { // floor or ceiling
                 transparency = 0.0;
-                if (n.y > 0.0) // floor
+                if (n.y > 0.0 && p.y < height) // floor
                     ret = texStain(vec3(p.xz * 5., 1.0), vec3(0.0), vec3(1.0), 2);
                 else
                     ret = vec3(0.8);
