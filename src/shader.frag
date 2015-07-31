@@ -536,7 +536,16 @@ vec3 texConcrete(vec3 p, vec3 n)
     vec2 uv = vec2(max(coef.x, coef.z), coef.y);
     vec3 grey = mix(texStain(vec3(uv * 10., 1.0), vec3(0.6), vec3(0.4), 64),
     vec3(noise(uv * 100.)), 0.3);
-    return grey * 0.2 + 0.5;
+    vec3 res = grey * 0.2 + 0.5;
+    if (p.z > 1.57)
+    {
+        p.y = mod(p.y + FLOOR_HEIGHT, 2. * FLOOR_HEIGHT) - FLOOR_HEIGHT;
+        if (abs(p.y) < ELEVATOR_HEIGHT - BEAM_THICKNESS - 0.01)
+          res = vec3(0.4);
+        if (p.z > 1.58 && abs(p.y) < ELEVATOR_HEIGHT - BEAM_THICKNESS - 0.02)
+          res = smoothstep(0.005, 0.01, abs(p.x)) * vec3(0.4) + vec3(0.4);
+    }
+    return res;
 }
 
 vec3 metalNormal(vec3 p, vec3 n)
@@ -571,16 +580,16 @@ vec3 getMaterial(vec3 ro, float t, vec3 rd, int id, inout vec3 n, out float tran
             ret = texConcrete(p, n);
             break;
         case BEAM_ID:
-            ret = vec3(0.3);
+            ret = vec3(0.25);
             break;
         case STRUCT_ID:
-            ret = vec3(0.8);//texBeam(p);
+            ret = vec3(0.8);
             break;
         case METAL_ID:
             ret = vec3(0.6);
             break;
         case CABLE_ID:
-            ret = vec3(0.0);
+            ret = vec3(0.2);
             break;
         case WINDOW_ID:
             vec3 ns = abs(n);
