@@ -241,7 +241,7 @@ vec3 getMaterial(vec3 p, int id, inout vec3 n, out float transparency)
             return texStain(p, vec3(1.0, 0.0, 0.0), vec3(0.125, 0.05, 0.1), 2);
         case BEAM_ID:
         case STRUCT_ID:
-            return vec3(0.5);//texBeam(p);
+            return vec3(0.8);//texBeam(p);
         case METAL_ID:
             return vec3(0.6);
         case CABLE_ID:
@@ -281,7 +281,8 @@ vec3 getNormalMap(vec3 p, int id)
     {
         case BEAM_ID:
         case STRUCT_ID:
-            return metalNormal(p);
+            return vec3(0.0);
+ //           return metalNormal(p);
         case METAL_ID:
             return metalNormal(p - vec3(0.0, height, 0.0));
         case CABLE_ID:
@@ -459,6 +460,7 @@ vec2 elevator(vec3 p, float h)
             ELEVATOR_HEIGHT - BEAM_THICKNESS, 0.8));
     float c2 = cylinder(p - vec3(0.0, h, 1.0), vec2(0.8 - BEAM_THICKNESS, ELEVATOR_HEIGHT -
             BEAM_THICKNESS));
+    float ceiling = roundBox(p - vec3(0.0, h + ELEVATOR_HEIGHT - 0.45, 0.0), vec3(0.42), 0.08);
 
     float hole = sBox(p - vec3(0.0, h + ELEVATOR_HEIGHT, 0.0), vec3(0.4));
 
@@ -473,11 +475,13 @@ vec2 elevator(vec3 p, float h)
 
     vec2 walls = vec2(WINDOW_ID, max(-hole, max(-min(b2, c2), min(b1, c1))));
     vec2 structure = vec2(STRUCT_ID, min(s1, min(s2, min(s3, s4))));
+    vec2 trapBorder = vec2(STRUCT_ID, max(-min(hole, b2), ceiling));
 
     vec2 panel = vec2(METAL_ID, min(b3, min(b4, c3)));
 
     vec2 ret = (walls.y < structure.y) ? walls : structure;
     ret = (ret.y < panel.y) ? ret : panel;
+    ret = (ret.y < trapBorder.y) ? ret : trapBorder;
 
     return ret;
 }
@@ -514,7 +518,7 @@ void animate(inout vec3 ro, inout vec3 ta)
     ro.z = 0.0;
 
     ta.x = 0.2;
-    ta.y = height;
+    ta.y = height + sin((max(fract(iGlobalTime / 10.) * 4./3., 1) - 1.) * 3. * PI);
     ta.z = 0.8;
 }
 
@@ -526,11 +530,11 @@ float softshadow(in vec3 ro, in vec3 rd, in float tmin, in float tmax)
     for (int i = 0; i < 16; i++)
     {
         vec2 h = map(ro + rd * t);
-        if ((transparency = mod(int(h.x), 16) / 15.0)  > 0.0)
+        /*if ((transparency = mod(int(h.x), 16) / 15.0)  > 0.0)
         {
                 t += 0.10;
                 continue;
-        }
+        }*/
         res = min(res, 8.0 * h.y / t);
         t += clamp(h.y, 0.02, 0.10);
         if(h.y < 0.001 || t > tmax)
@@ -568,7 +572,7 @@ vec3 ray_marching(inout float t, vec3 ro, vec3 rd, out float transparency)
 
     // Lights and shadows
 #ifdef LIGHT
-    vec3 light = vec3(0.0, 1.0 + height, 0.0);
+    vec3 light = vec3(0.0, height + ELEVATOR_HEIGHT - 0.1, 0.0);
     vec3 lightDir = normalize(light - pos);
     float amb = 0.1;
     float dif = clamp(dot(n, lightDir), 0.0, 1.0);
