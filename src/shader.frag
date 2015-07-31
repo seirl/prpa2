@@ -238,7 +238,7 @@ vec3 texBeam(vec3 p)
 }
 
 #define cubes_minStep 0.1
-#define cubes_maxStep 90.0
+#define cubes_maxStep 45.0
 #define cubes_delta 0.01
 #define cubes_damping 0.9
 #define cubes_numSteps 100
@@ -286,15 +286,14 @@ vec3 cubes(vec3 ro, float t, vec3 rd)
     vec3 orig = vec3(0.0,0.0,0.0);
     float didHitTerrain = cubes_castRay(ro, rd, orig);
     if(didHitTerrain < cubes_maxStep){
-        vec3 colToRtn = vec3(0.5);
         vec3 nml = cubes_normal(orig);
-        //color correction
-        colToRtn.xyz = pow(nml.xyz, vec3(1.0/2.2));
-        colToRtn.xyz *= 0.5;
-        return colToRtn;
+        vec3 colToRtn = abs(nml) * 0.6;
+        float fogval = exp(-pow(1.8*didHitTerrain/cubes_maxStep, 2.0));
+
+        return mix(vec3(0.5, 0.6, 0.7), colToRtn, fogval);
     }
     else{
-        return vec3(0);
+        return vec3(0.5, 0.6, 0.7);
     }
 }
 
