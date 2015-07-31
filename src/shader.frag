@@ -530,11 +530,11 @@ float softshadow(in vec3 ro, in vec3 rd, in float tmin, in float tmax)
     for (int i = 0; i < 16; i++)
     {
         vec2 h = map(ro + rd * t);
-        /*if ((transparency = mod(int(h.x), 16) / 15.0)  > 0.0)
+        if ((transparency = mod(int(h.x), 16) / 15.0)  > 0.0)
         {
-                t += 0.10;
+                t += DETAIL;
                 continue;
-        }*/
+        }
         res = min(res, 8.0 * h.y / t);
         t += clamp(h.y, 0.02, 0.10);
         if(h.y < 0.001 || t > tmax)
