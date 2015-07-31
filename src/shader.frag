@@ -30,6 +30,8 @@ float height;
 #define FLOOR_HEIGHT    1.5
 #define ELEVATOR_HEIGHT (FLOOR_HEIGHT * 0.85)
 #define H_BEAM_HEIGTH   (FLOOR_HEIGHT - BEAM_WIDTH - 0.1)
+#define ADD vec2(1.0, 0.0)
+#define MOD2 vec2(3.07965, 7.4235)
 
 // Transparency = mod(id, 16)
 #define GROUND_ID   0x00
@@ -530,23 +532,29 @@ vec3 texMarble(vec3 p)
 
 vec3 texConcrete(vec3 p, vec3 n)
 {
-    vec3 coef = p * (1.0 - n);
+    vec3 coef = abs(p) * (1.0 - abs(n));
     vec2 uv = vec2(max(coef.x, coef.z), coef.y);
-
-    return vec3(0.0);
+    vec3 grey = mix(texStain(vec3(uv * 10., 1.0), vec3(0.6), vec3(0.4), 64),
+    vec3(noise(uv * 100.)), 0.3);
+    return grey * 0.2 + 0.5;
 }
 
-vec3 metalNormal(vec3 p)
+vec3 metalNormal(vec3 p, vec3 n)
 {
-  return texBeam(p);
+    vec3 disp = vec3(noise(n.yz), noise(n.xz), noise(n.xy));
+    return mix(0.1 * disp, 0.3 * disp,
+            (fbm(floor(300.*(p.xy+p.yz))) + 1.0) / 2.0);
 }
 
-vec3 getNormalMap(vec3 p, int id)
+vec3 getNormalMap(vec3 p, vec3 n, int id)
 {
     switch (id)
     {
         case METAL_ID:
-            return metalNormal(p - vec3(0.0, height, 0.0));
+        case STRUCT_ID:
+            return metalNormal(p - vec3(0.0, height, 0.0), n);
+        case BEAM_ID:
+            return metalNormal(p, n);
         default:
           return vec3(0.);
     }
@@ -560,9 +568,11 @@ vec3 getMaterial(vec3 ro, float t, vec3 rd, int id, inout vec3 n, out float tran
     switch (id)
     {
         case WALL_ID:
-            ret = texStain(p, vec3(1.0, 0.0, 0.0), vec3(0.125, 0.05, 0.1), 2);
+            ret = texConcrete(p, n);
             break;
         case BEAM_ID:
+            ret = vec3(0.3);
+            break;
         case STRUCT_ID:
             ret = vec3(0.8);//texBeam(p);
             break;
@@ -583,7 +593,10 @@ vec3 getMaterial(vec3 ro, float t, vec3 rd, int id, inout vec3 n, out float tran
                     break;
                 }
                 else
+                {
+                    id = STRUCT_ID;
                     ret = vec3(0.8);
+                }
             }
             else
                 ret = vec3(0.1, 0.2, 0.5);
@@ -596,7 +609,7 @@ vec3 getMaterial(vec3 ro, float t, vec3 rd, int id, inout vec3 n, out float tran
             ret = vec3(0.0);
             break;
     }
-    n += getNormalMap(p, id);
+    n += getNormalMap(p, n, id);
     normalize(n);
     return ret;
 }
@@ -782,15 +795,23 @@ vec2 elevator(vec3 p, float h)
     float b4 = box(p - vec3(0.8 - WALL_THICKNESS * 2.0, h - 0.2, 0.3), vec3(WALL_THICKNESS, WALL_THICKNESS, 0.15));
     float c3 = hcylinder(p - vec3(0.8 - WALL_THICKNESS * 3.0, h - 0.2, 0.2), vec2(WALL_THICKNESS, 0.7));
 
+    float c4 = semiVInfCylinder(p - vec3(0.6, 0.0, -0.2), 0.01, h + ELEVATOR_HEIGHT);
+    float c5 = semiVInfCylinder(p - vec3(-0.6, 0.0, -0.2), 0.01, h + ELEVATOR_HEIGHT);
+    float c6 = semiVInfCylinder(p - vec3(0.6, 0.0, 0.7), 0.01, h + ELEVATOR_HEIGHT);
+    float c7 = semiVInfCylinder(p - vec3(-0.6, 0.0, 0.7), 0.01, h + ELEVATOR_HEIGHT);
+
     vec2 walls = vec2(WINDOW_ID, max(-hole, max(-min(b2, c2), min(b1, c1))));
     vec2 structure = vec2(METAL_ID, min(s1, min(s2, min(s3, s4))));
     vec2 trapBorder = vec2(STRUCT_ID, max(-min(hole, b2), ceiling));
 
     vec2 panel = vec2(METAL_ID, min(b3, min(b4, c3)));
 
+    vec2 cables = vec2(CABLE_ID, min(c4, min(c5, min(c6, c7))));
+
     vec2 ret = (walls.y < structure.y) ? walls : structure;
     ret = (ret.y < panel.y) ? ret : panel;
     ret = (ret.y < trapBorder.y) ? ret : trapBorder;
+    ret = (ret.y < cables.y) ? ret : cables;
 
     return ret;
 }
