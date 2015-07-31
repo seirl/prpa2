@@ -35,7 +35,7 @@ float height;
 #define GROUND_ID   0x00
 #define WALL_ID     0x10
 #define BEAM_ID     0x20
-#define WINDOW_ID   0x3A
+#define WINDOW_ID   0x35
 #define STRUCT_ID   0x40
 #define CABLE_ID    0x50
 #define METAL_ID    0x60
