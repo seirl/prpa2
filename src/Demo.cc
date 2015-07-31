@@ -93,10 +93,16 @@ void Demo::init()
 void Demo::update()
 {
     static size_t lastTime = elapsedTime();
+    static size_t frames = 0;
     window->poll_events();
+    ++frames;
     size_t currentTime = elapsedTime();
-    FPS = 1000.0 / (currentTime - lastTime);
-    lastTime = currentTime;
+    if (currentTime - lastTime > 500)
+    {
+      FPS = frames * 1000.0 / (currentTime - lastTime);
+      frames = 0;
+      lastTime = currentTime;
+    }
 }
 
 void Demo::render()
