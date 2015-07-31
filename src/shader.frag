@@ -431,7 +431,7 @@ vec3 mandelbulb(vec3 ro, float t, vec3 rd)
 
 vec3 scene(vec3 ro, float t, vec3 rd)
 {
-    /* return cubes(ro, t, rd); */
+    //return cubes(ro, t, rd);
     return mandelbulb(ro, t, rd);
 }
 
@@ -446,7 +446,7 @@ vec3 getMaterial(vec3 ro, float t, vec3 rd, int id, inout vec3 n, out float tran
             return texStain(pos, vec3(1.0, 0.0, 0.0), vec3(0.125, 0.05, 0.1), 2);
         case BEAM_ID:
         case STRUCT_ID:
-            return vec3(0.5);//texBeam(pos);
+            return vec3(0.5);
         case METAL_ID:
             return vec3(0.6);
         case CABLE_ID:
@@ -768,7 +768,7 @@ void animate(inout vec3 ro, inout vec3 ta)
     ro.z = 0.0;
 
     ta.x = 0.2;
-    ta.y = height + sin((max(fract(iGlobalTime / 10.) * 4./3., 1) - 1.) * 3. * PI);
+    ta.y = height + sin((max(fract((iGlobalTime) / 40. - 0.4) * 4./3., 1) - 1.) * 3. * PI);
     ta.z = 0.8;
 }
 
@@ -911,7 +911,7 @@ void main()
 #endif
 
     float t = iGlobalTime / 20.;
-    height = 6.0 * FLOOR_HEIGHT * (0.5 * (tanh(10.0 * (mod(t, 1.0) - 0.5)) + 1.) + floor(t));
+    height = 6.0 * FLOOR_HEIGHT * (0.5 * (tanh(10.0 * (fract(t) - 0.5)) + 1.) + floor(t));
 
     // Camera
     vec3 ro = vec3(0.0);

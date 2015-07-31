@@ -141,7 +141,7 @@ vec2 mainSound(float time)
     PLAY(kick, 0.7, 10.);
 
     // ding
-    t = mod(time, 5.);
+    t = mod(time - 0.5, 20.);
     PLAY(ding, 0., 42.);
 
     total = max(3., total);
