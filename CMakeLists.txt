@@ -34,4 +34,4 @@ FILE(
 )
 
 add_executable(prpa2 ${header_files} ${source_files})
-target_link_libraries(prpa2 ${OPENGL_LIBRARIES} ${GLFW_LIBRARIES} ${GLEW_LIBRARIES} ${OPENAL_LIBRARIES} openal alut Threads::Threads)
+target_link_libraries(prpa2 ${OPENGL_LIBRARIES} ${GLFW_LIBRARIES} ${GLEW_LIBRARIES} ${OPENAL_LIBRARIES} openal alut Threads::Threads ${CMAKE_DL_LIBS})
