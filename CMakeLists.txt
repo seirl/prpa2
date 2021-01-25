@@ -3,6 +3,8 @@
 cmake_minimum_required(VERSION 2.8)
 project(PRPA2)
 
+set(THREADS_PREFER_PTHREAD_FLAG ON)
+find_package(Threads REQUIRED)
 find_package(PkgConfig REQUIRED)
 find_package(OpenGL REQUIRED)
 find_package(OpenAL REQUIRED)
@@ -17,6 +19,7 @@ include_directories(src)
 
 set(EXECUTABLE_OUTPUT_PATH ..)
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++14 -g3")
+set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_CXX_FLAGS} -std=c++14 -g3")
 
 FILE(
     GLOB_RECURSE
@@ -31,4 +34,4 @@ FILE(
 )
 
 add_executable(prpa2 ${header_files} ${source_files})
-target_link_libraries(prpa2 ${OPENGL_LIBRARIES} ${GLFW_LIBRARIES} ${GLEW_LIBRARIES} ${OPENAL_LIBRARIES} openal alut)
+target_link_libraries(prpa2 ${OPENGL_LIBRARIES} ${GLFW_LIBRARIES} ${GLEW_LIBRARIES} ${OPENAL_LIBRARIES} openal alut Threads::Threads)
